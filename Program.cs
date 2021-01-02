@@ -1,13 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
+using System.Runtime.ExceptionServices;
 using System.Threading.Tasks;
 using DiscordBot.Commands;
 using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
+using Microsoft.Extensions.Logging;
 
 namespace DiscordBot
 {
@@ -15,7 +18,7 @@ namespace DiscordBot
     {
         public static DiscordClient _discord;
 
-        public const string LogoUrl = "https://forum.sol-rp.com/styles/default/xenforo/southlandrp.png";
+        public static string LogoUrl = "https://forum.sol-rp.com/styles/default/xenforo/southlandrp.png";
 
         #region DiscordGuilds
 
@@ -59,7 +62,7 @@ namespace DiscordBot
 
         */
 
-        private static CommandsNextModule _commandsNext;
+        private static CommandsNextExtension _commandsNext;
 
         private static List<string> bannedWords = new List<string>
         {
@@ -70,6 +73,9 @@ namespace DiscordBot
         {
             try
             {
+                AppDomain.CurrentDomain.UnhandledException += CurrentDomainOnUnhandledException;
+                AppDomain.CurrentDomain.FirstChanceException += CurrentDomainOnFirstChanceException;
+
 #if DEBUG
                 Stopwatch sw = new Stopwatch();
                 sw.Start();
@@ -79,16 +85,14 @@ namespace DiscordBot
 
                 Console.Title = "Southland Roleplay Discord Bot";
 
-#if RELEASE
                 WeatherUpdate.InitWeatherUpdate();
                 SignalR.StartConnection();
-#endif
 
                 _discord = new DiscordClient(new DiscordConfiguration
                 {
                     Token = Settings.Default.Token,
                     TokenType = TokenType.Bot,
-                    LogLevel = LogLevel.Debug,
+                    MinimumLogLevel = LogLevel.Error,
                     AutoReconnect = true,
                 });
 
@@ -155,7 +159,7 @@ namespace DiscordBot
 
                 _commandsNext = _discord.UseCommandsNext(new CommandsNextConfiguration
                 {
-                    StringPrefix = "?",
+                    StringPrefixes = new[] { "?" },
                     EnableDms = false,
                     EnableDefaultHelp = false
                 });
@@ -178,6 +182,20 @@ namespace DiscordBot
                 Console.WriteLine(e);
                 return;
             }
+        }
+
+        private static void CurrentDomainOnFirstChanceException(object? sender, FirstChanceExceptionEventArgs e)
+        {
+            File.WriteAllText($"{Directory.GetCurrentDirectory()}/unhandled.txt", e.Exception.Message);
+            Console.WriteLine(e.Exception.Message);
+            return;
+        }
+
+        private static void CurrentDomainOnUnhandledException(object sender, UnhandledExceptionEventArgs e)
+        {
+            File.WriteAllText($"{Directory.GetCurrentDirectory()}/unhandled.txt", (e.ExceptionObject as Exception)?.Message);
+            Console.WriteLine((e.ExceptionObject as Exception)?.Message);
+            return;
         }
 
         private static async Task OnDiscordBotLoaded()
@@ -272,7 +290,7 @@ namespace DiscordBot
             }
         }
 
-        private static async Task DiscordOnMessageReactionAdded(MessageReactionAddEventArgs e)
+        private static async Task DiscordOnMessageReactionAdded(DiscordClient sender, MessageReactionAddEventArgs e)
         {
             if (e.User.IsBot) return;
 
@@ -315,7 +333,7 @@ namespace DiscordBot
                 {
                     DiscordMember discordMember = await MainGuild.GetMemberAsync(e.User.Id);
 
-                    await MainGuild.GrantRoleAsync(discordMember, MainGuild.GetRole(704002720692174908));
+                    await discordMember.GrantRoleAsync(MainGuild.GetRole(795064838635913236));
                 }
             }
 
@@ -339,7 +357,7 @@ namespace DiscordBot
             #endregion Gov Discord
         }
 
-        private static async Task DiscordOnMessageReactionRemoved(MessageReactionRemoveEventArgs e)
+        private static async Task DiscordOnMessageReactionRemoved(DiscordClient sender, MessageReactionRemoveEventArgs e)
         {
             #region Color Reaction
 
@@ -375,9 +393,9 @@ namespace DiscordBot
             #endregion Color Reaction
         }
 
-        private static async Task DiscordOnMessageDeleted(MessageDeleteEventArgs e)
+        private static async Task DiscordOnMessageDeleted(DiscordClient sender, MessageDeleteEventArgs e)
         {
-            if (e.Client == _discord) return;
+            if (sender == _discord) return;
 
             if (e.Guild == MainGuild)
             {
@@ -392,57 +410,10 @@ namespace DiscordBot
             }*/
         }
 
-        private static async Task DiscordOnMessageCreated(MessageCreateEventArgs e)
+        private static async Task DiscordOnMessageCreated(DiscordClient sender, MessageCreateEventArgs e)
         {
             try
             {
-                if (e.Channel.Id == 704002734411743363)
-                {
-                    if (!e.Message.Attachments.Any() && !e.Message.Embeds.Any() && !e.Message.Content.StartsWith("http"))
-                    {
-                        await e.Message.DeleteAsync("Non-image content in gallery.");
-                        DiscordDmChannel dmChannel = await _discord.CreateDmAsync(e.Author);
-                        await dmChannel.SendMessageAsync($"{e.Channel.Mention} is a media only channel!");
-                        await dmChannel.DeleteAsync();
-                    }
-                }
-
-                DiscordUser morettiuser = await _discord.GetUserAsync(132968074709041153);
-
-                bool morettiMention = e.Message.MentionedUsers.Any(x => x.Id == 132968074709041153);
-
-                if (morettiMention && !e.Author.IsBot)
-                {
-                    if (morettiuser.Presence.Status != UserStatus.Online || morettiuser.Presence.Status == UserStatus.Invisible || morettiuser.Presence.Status == UserStatus.Offline)
-                    {
-                        await e.Message.DeleteAsync();
-                        await e.Channel.SendMessageAsync(
-                            $"{e.Author.Mention} - Moretti is currently busy. If it's a bug, please use the ?bug command to report it. Anything else can be put onto the forums!");
-
-                        DiscordMember moretti = null;
-
-                        if (e.Guild == MainGuild)
-                        {
-                            moretti = MainGuild.Members.FirstOrDefault(x => x.Id == 132968074709041153);
-                        }
-                        /*
-                        if (e.Guild == _emergencyGuild)
-                        {
-                            moretti = _emergencyGuild.Members.FirstOrDefault(x => x.Id == 132968074709041153);
-                        }
-
-                        if (e.Guild == _govGuild)
-                        {
-                            moretti = _govGuild.Members.FirstOrDefault(x => x.Id == 132968074709041153);
-                        }
-                        */
-                        if (moretti == null) return;
-
-                        await moretti.SendMessageAsync(
-                            $"{e.Author.Username} has tried to send you a message in {e.Channel.Mention}. Contents: \n {e.Message.Content}");
-                    }
-                }
-
                 bool contains = false;
 
                 foreach (string bannedWord in bannedWords)
@@ -453,7 +424,7 @@ namespace DiscordBot
                     }
                 }
 
-                if (contains && e.Client != _discord)
+                if (contains && sender != _discord)
                 {
                     await e.Message.DeleteAsync();
 
@@ -490,7 +461,7 @@ namespace DiscordBot
             }
         }
 
-        private static async Task DiscordOnGuildMemberUpdated(GuildMemberUpdateEventArgs e)
+        private static async Task DiscordOnGuildMemberUpdated(DiscordClient sender, GuildMemberUpdateEventArgs e)
         {
             if (e.Guild == MainGuild)
             {
@@ -745,7 +716,7 @@ namespace DiscordBot
             }*/
         }
 
-        private static async Task DiscordOnGuildMemberRemoved(GuildMemberRemoveEventArgs e)
+        private static async Task DiscordOnGuildMemberRemoved(DiscordClient sender, GuildMemberRemoveEventArgs e)
         {
             if (e.Guild == MainGuild)
             {
@@ -757,7 +728,7 @@ namespace DiscordBot
             }
         }
 
-        private static async Task DiscordOnGuildMemberAdded(GuildMemberAddEventArgs e)
+        private static async Task DiscordOnGuildMemberAdded(DiscordClient sender, GuildMemberAddEventArgs e)
         {
             if (e.Guild == MainGuild)
             {
@@ -766,7 +737,7 @@ namespace DiscordBot
                 DiscordEmbedBuilder embedBuilder = new DiscordEmbedBuilder
                 {
                     Title = "New User",
-                    ThumbnailUrl = LogoUrl,
+                    Thumbnail = new DiscordEmbedBuilder.EmbedThumbnail { Url = LogoUrl },
                     Timestamp = DateTimeOffset.Now,
                     Color = DiscordColor.SpringGreen,
                     Description = $"Look out! {e.Member.Username} has joined {e.Guild.Name}!"

@@ -15,7 +15,7 @@ using TwitchLib.Api.V5.Models.Users;
 
 namespace DiscordBot.Commands
 {
-    public class DiscordCommands
+    public class DiscordCommands : BaseCommandModule
     {
         [DSharpPlus.CommandsNext.Attributes.Command("ping")]
         public async Task DiscordCommandPing(CommandContext ctx)
@@ -45,7 +45,7 @@ namespace DiscordBot.Commands
             DiscordEmbedBuilder embedBuilder = new DiscordEmbedBuilder();
 
             embedBuilder.Title = "Welcome";
-            embedBuilder.ThumbnailUrl = "http://paradigmroleplay.com/img/logo.png";
+            embedBuilder.Thumbnail = new DiscordEmbedBuilder.EmbedThumbnail { Url = Program.LogoUrl };
             embedBuilder.Timestamp = DateTime.Now;
             embedBuilder.Color = DiscordColor.DarkBlue;
 
@@ -53,7 +53,7 @@ namespace DiscordBot.Commands
 
             embedBuilder.Description = mentionedUser != null
                 ? $"Welcome to Southland Roleplay {mentionedUser.Mention}, We are proud to have you with us! Our server is under a restructure!"
-                : $"Welcome to Southland Roleplay, We are proud to have you with us! Our server is under a restructure!";
+                : $"Welcome to Southland Roleplay, We are proud to have you with us! Our server is launching soon!";
 
             embedBuilder.AddField("Forums", "https://forum.sol-rp.com");
             embedBuilder.AddField("Website", "https://sol-rp.com");
@@ -81,7 +81,7 @@ namespace DiscordBot.Commands
         [Command("player"), Aliases("players")]
         public async Task DiscordCommandOnlinePlayers(CommandContext ctx)
         {
-            if (ctx.Channel.Id != 704015413729689700) return;
+            if (ctx.Channel.Id != 787791455950471218) return;
 
             await ctx.TriggerTypingAsync();
 
@@ -103,7 +103,7 @@ namespace DiscordBot.Commands
         [Command("activity")]
         public async Task DiscordActivityCommand(CommandContext ctx)
         {
-            if (ctx.Channel.Id != 704015413729689700)
+            if (ctx.Channel.Id != 787791455950471218)
             {
                 await ctx.Message.DeleteAsync("Incorrect Channel");
                 return;
@@ -168,7 +168,7 @@ namespace DiscordBot.Commands
                     Author = null,
                     Color = DiscordColor.Cyan,
                     Description = $"Current Weather: {textInfo.ToTitleCase(currentWeather.weather.FirstOrDefault().description)}",
-                    ThumbnailUrl = $"https://openweathermap.org/img/wn/{currentWeather.weather.FirstOrDefault()?.icon}.png",
+                    Thumbnail = new DiscordEmbedBuilder.EmbedThumbnail { Url = $"https://openweathermap.org/img/wn/{currentWeather.weather.FirstOrDefault()?.icon}.png" },
                     Timestamp = DateTimeOffset.Now,
                     Title = "Current Weather for Los Santos",
                 };
@@ -333,6 +333,7 @@ namespace DiscordBot.Commands
                 $"{ctx.User.Username} has posted a message as the bot in {channel.Mention}.");
         }
 
+        /*
         [Command("masspm"), RequirePermissions(Permissions.Administrator), Hidden]
         public async Task MassPmCommand(CommandContext ctx, [RemainingText] string message)
         {
@@ -369,6 +370,6 @@ namespace DiscordBot.Commands
             }
 
             await ctx.RespondAsync($"Send the PM to {count}/{ctx.Guild.MemberCount} Members.");
-        }
+        }*/
     }
 }

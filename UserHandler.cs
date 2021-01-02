@@ -7,6 +7,7 @@ namespace DiscordBot
     {
         public static async void SendMessageToUser(string userId, string message)
         {
+            /*
             bool tryParse = ulong.TryParse(userId, out ulong uid);
 
             if (!tryParse)
@@ -31,7 +32,7 @@ namespace DiscordBot
                 return;
             }
 
-            await dmChannel.SendMessageAsync(message);
+            await dmChannel.SendMessageAsync(message);*/
         }
     }
 }
