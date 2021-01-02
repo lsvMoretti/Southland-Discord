@@ -12,7 +12,7 @@ namespace DiscordBot
         {
             Console.WriteLine($"Starting SignalR Hub Connection");
 
-            string url = @"http://193.70.80.232:2000/signalr";
+            string url = @"http://176.9.66.40:2000/signalr";
 
             hubConnection = new HubConnectionBuilder().WithUrl(url).Build();
             hubConnection.Reconnecting += HubConnection_Reconnecting;
@@ -57,9 +57,7 @@ namespace DiscordBot
             hubConnection.On("ServerRestart", GameReportHandler.ClearReportChannels);
             hubConnection.On<int, string>("SendReportReply", GameReportHandler.SendReportReply);
 
-            #endregion
-
-
+            #endregion Admin Reports
         }
 
         private static Task HubConnection_Reconnected(string arg)
@@ -128,7 +126,7 @@ namespace DiscordBot
         public static async Task<DateTime> FetchServerStartTime()
         {
             Console.WriteLine($"Fetching Server Time");
-            DateTime startTime =  await hubConnection.InvokeAsync<DateTime>("FetchGameServerStartTime");
+            DateTime startTime = await hubConnection.InvokeAsync<DateTime>("FetchGameServerStartTime");
             Console.WriteLine($"Start Time: {startTime}");
             return startTime;
         }
@@ -141,7 +139,6 @@ namespace DiscordBot
         public static async void SendMessageToReportPlayer(int reportId, string message)
         {
             await hubConnection.InvokeAsync("SendMessageToReport", reportId, message);
-
         }
 
         public static async void CloseReport(int reportId)

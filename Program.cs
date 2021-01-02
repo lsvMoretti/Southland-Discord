@@ -15,31 +15,33 @@ namespace DiscordBot
     {
         public static DiscordClient _discord;
 
-        public const string LogoUrl = "http://paradigmroleplay.com/img/logo.png";
+        public const string LogoUrl = "https://forum.sol-rp.com/styles/default/xenforo/southlandrp.png";
 
         #region DiscordGuilds
 
-        private static readonly ulong _mainGuildId = 523675917273399318;
+        private static readonly ulong _mainGuildId = 748851074135490560;
         public static DiscordGuild MainGuild;
-
+        /*
         private static readonly ulong _emergencyGuildId = 633766938396590080;
         private static DiscordGuild _emergencyGuild;
 
         private static readonly ulong _govGuildId = 692782773903294566;
         private static DiscordGuild _govGuild;
+        */
 
         #endregion DiscordGuilds
 
         #region MainGuildChannels
 
-        private static readonly ulong _mainGuildLogChannelId = 704002752417890324;
+        private static readonly ulong _mainGuildLogChannelId = 795062350398881832;
         public static DiscordChannel MainGuildLogChannel;
 
-        private static readonly ulong _mainGuildJoinChannelId = 704002730175365260;
+        private static readonly ulong _mainGuildJoinChannelId = 748851942075269201;
         private static DiscordChannel _mainGuildJoinChannel;
 
-
         #endregion MainGuildChannels
+
+        /*
 
         #region EmergencyGuildChannels
 
@@ -50,11 +52,12 @@ namespace DiscordBot
 
         #region Gov Guild Channels
 
-        
         private static readonly ulong _govLogChannelId = 695134603228217344;
         private static DiscordChannel _govLogChannel;
 
-        #endregion
+        #endregion Gov Guild Channels
+
+        */
 
         private static CommandsNextModule _commandsNext;
 
@@ -74,7 +77,7 @@ namespace DiscordBot
 
                 Console.WriteLine("Starting Discord Bot");
 
-                Console.Title = "Paradigm Roleplay Discord Bot";
+                Console.Title = "Southland Roleplay Discord Bot";
 
 #if RELEASE
                 WeatherUpdate.InitWeatherUpdate();
@@ -87,19 +90,17 @@ namespace DiscordBot
                     TokenType = TokenType.Bot,
                     LogLevel = LogLevel.Debug,
                     AutoReconnect = true,
-
                 });
 
                 MainGuild = await _discord.GetGuildAsync(_mainGuildId);
-                _emergencyGuild = await _discord.GetGuildAsync(_emergencyGuildId);
+                //_emergencyGuild = await _discord.GetGuildAsync(_emergencyGuildId);
                 //_govGuild = await _discord.GetGuildAsync(_govGuildId);
-
 
                 if (MainGuild != null)
                 {
                     Console.WriteLine($"Connected to {MainGuild.Name} Discord Guild.");
                 }
-
+                /*
                 if (_emergencyGuild != null)
                 {
                     Console.WriteLine($"Connected to {_emergencyGuild.Name} Discord Guild");
@@ -109,6 +110,7 @@ namespace DiscordBot
                 {
                     Console.WriteLine($"Connected to {_govGuild.Name} Discord Guild");
                 }
+                */
 
                 #region Main Guild Channels
 
@@ -116,6 +118,8 @@ namespace DiscordBot
                 _mainGuildJoinChannel = await _discord.GetChannelAsync(_mainGuildJoinChannelId);
 
                 #endregion Main Guild Channels
+
+                /*
 
                 #region Emergency Guild Channels
 
@@ -133,8 +137,9 @@ namespace DiscordBot
                     _govLogChannel = await _discord.GetChannelAsync(_govLogChannelId);
                 }
 
+                #endregion Gov Guild Channels
 
-                #endregion
+                */
 
                 #region Events
 
@@ -189,7 +194,7 @@ namespace DiscordBot
                 if (colorChannel != null)
                 {
                     IReadOnlyList<DiscordMessage> colorMessages = await colorChannel.GetPinnedMessagesAsync();
-            
+
                     DiscordEmoji redEmoji = DiscordEmoji.FromName(_discord, ":red_circle:");
 
                     DiscordEmoji orangeEmoji = await MainGuild.GetEmojiAsync(697489723828076624);
@@ -217,7 +222,7 @@ namespace DiscordBot
                             await currentMessage.CreateReactionAsync(redEmoji);
                             await currentMessage.ModifyAsync($"{currentMessage.Content}\n{redEmoji} - Red!");
                         }
-                        
+
                         if (currentMessage.Reactions.FirstOrDefault(x => x.Emoji == orangeEmoji) == null)
                         {
                             Console.WriteLine($"Dark Orange Emoji not found!");
@@ -225,7 +230,6 @@ namespace DiscordBot
                             await currentMessage.ModifyAsync($"{currentMessage.Content}\n{orangeEmoji} - Dark Orange!");
                         }
 
-                        
                         if (currentMessage.Reactions.FirstOrDefault(x => x.Emoji == pinkRedEmoji) == null)
                         {
                             Console.WriteLine($"Pink Red Emoji not found!");
@@ -242,7 +246,7 @@ namespace DiscordBot
 
                         return;
                     }
-                    
+
                     Console.WriteLine($"No message found, generating messages and reactions.");
 
                     DiscordMessage colorMessage =
@@ -257,7 +261,7 @@ namespace DiscordBot
 
                     Console.WriteLine($"New Message created and pinned.");
                 }
-                
+
                */
 #endif
             }
@@ -270,11 +274,11 @@ namespace DiscordBot
 
         private static async Task DiscordOnMessageReactionAdded(MessageReactionAddEventArgs e)
         {
-
             if (e.User.IsBot) return;
 
             #region Color Reaction
 
+            /*
             if (e.Channel.Id == 704016300170805268)
             {
                 Console.WriteLine($"{e.User.Username} has reacted with {e.Emoji.Name} in the {e.Channel.Name} channel.");
@@ -285,47 +289,41 @@ namespace DiscordBot
                 {
                     await MainGuild.GrantRoleAsync(discordMember, MainGuild.GetRole(697477618022219778));
                 }
-
                 else if (e.Emoji == await MainGuild.GetEmojiAsync(697489723828076624))
                 {
                     await MainGuild.GrantRoleAsync(discordMember, MainGuild.GetRole(697477763791192094));
                 }
-
-                
                 else if (e.Emoji == DiscordEmoji.FromName(_discord, ":small_red_triangle_down:"))
                 {
                     await MainGuild.GrantRoleAsync(discordMember, MainGuild.GetRole(697478876137521282));
                 }
-
                 else if (e.Emoji == await MainGuild.GetEmojiAsync(697518319304966254))
                 {
                     await MainGuild.GrantRoleAsync(discordMember, MainGuild.GetRole(697479141594759188));
                 }
-
             }
+            */
 
-            #endregion
+            #endregion Color Reaction
 
             #region Rules React
 
-            if (e.Channel.Id == 704002729206480948)
+            if (e.Channel.Id == 788207707177484349)
             {
                 // Discord Rules
                 if (e.Emoji == DiscordEmoji.FromName(_discord, ":jobdone:"))
                 {
-
                     DiscordMember discordMember = await MainGuild.GetMemberAsync(e.User.Id);
 
                     await MainGuild.GrantRoleAsync(discordMember, MainGuild.GetRole(704002720692174908));
-
                 }
             }
 
-
-            #endregion
+            #endregion Rules React
 
             #region Gov Discord
 
+            /*
             if (e.Message.Id == 695137895446741022)
             {
                 // Gov Roles
@@ -336,54 +334,49 @@ namespace DiscordBot
                     await _govGuild.GrantRoleAsync(discordMember, _govGuild.GetRole(695134562396930089));
                 }
             }
+            */
 
-            #endregion
+            #endregion Gov Discord
         }
 
-        
         private static async Task DiscordOnMessageReactionRemoved(MessageReactionRemoveEventArgs e)
         {
             #region Color Reaction
 
+            /*
             if (e.Channel.Id == 697251555111469136)
             {
-
-
                 DiscordMember discordMember = await MainGuild.GetMemberAsync(e.User.Id);
 
                 Console.WriteLine($"{discordMember.Nickname} has removed their reaction {e.Emoji} from the {e.Channel.Name} channel!");
-                 
+
                 if (e.Emoji == DiscordEmoji.FromName(_discord, ":red_circle:"))
                 {
                     await MainGuild.RevokeRoleAsync(discordMember, MainGuild.GetRole(697477618022219778), "Change of color");
                 }
-
                 else if (e.Emoji == await MainGuild.GetEmojiAsync(697489723828076624))
                 {
-                    await MainGuild.RevokeRoleAsync(discordMember, MainGuild.GetRole(697477763791192094),"Change of color");
+                    await MainGuild.RevokeRoleAsync(discordMember, MainGuild.GetRole(697477763791192094), "Change of color");
                 }
-                
+
                 if (e.Emoji == DiscordEmoji.FromName(_discord, ":small_red_triangle_down:"))
                 {
                     await MainGuild.RevokeRoleAsync(discordMember, MainGuild.GetRole(697478876137521282), "Change of color");
                 }
-
                 else if (e.Emoji == await MainGuild.GetEmojiAsync(697518319304966254))
                 {
-                    await MainGuild.RevokeRoleAsync(discordMember, MainGuild.GetRole(697479141594759188),"Change of color");
+                    await MainGuild.RevokeRoleAsync(discordMember, MainGuild.GetRole(697479141594759188), "Change of color");
                 }
-
             }
 
             return;
+            */
 
-            #endregion
+            #endregion Color Reaction
         }
-
 
         private static async Task DiscordOnMessageDeleted(MessageDeleteEventArgs e)
         {
-
             if (e.Client == _discord) return;
 
             if (e.Guild == MainGuild)
@@ -391,12 +384,12 @@ namespace DiscordBot
                 await MainGuildLogChannel.SendMessageAsync(
                     $"A message was deleted from  {e.Channel.Mention}. Contents: {e.Message.Content}. The message was created by: {e.Message.Author.Username} at {e.Message.CreationTimestamp}.");
             }
-
+            /*
             if (e.Guild == _emergencyGuild)
             {
                 await _emergencyGuildLogChannel.SendMessageAsync(
                     $"Dispatch here, A message was deleted from {e.Channel.Mention}. Contents: {e.Message.Content}. The message was created by: {e.Message.Author.Username} at {e.Message.CreationTimestamp}.");
-            }
+            }*/
         }
 
         private static async Task DiscordOnMessageCreated(MessageCreateEventArgs e)
@@ -422,36 +415,34 @@ namespace DiscordBot
                 {
                     if (morettiuser.Presence.Status != UserStatus.Online || morettiuser.Presence.Status == UserStatus.Invisible || morettiuser.Presence.Status == UserStatus.Offline)
                     {
-
                         await e.Message.DeleteAsync();
                         await e.Channel.SendMessageAsync(
                             $"{e.Author.Mention} - Moretti is currently busy. If it's a bug, please use the ?bug command to report it. Anything else can be put onto the forums!");
-                        
-                        
+
                         DiscordMember moretti = null;
 
                         if (e.Guild == MainGuild)
                         {
                             moretti = MainGuild.Members.FirstOrDefault(x => x.Id == 132968074709041153);
                         }
-
+                        /*
                         if (e.Guild == _emergencyGuild)
                         {
                             moretti = _emergencyGuild.Members.FirstOrDefault(x => x.Id == 132968074709041153);
                         }
-                        
+
                         if (e.Guild == _govGuild)
                         {
                             moretti = _govGuild.Members.FirstOrDefault(x => x.Id == 132968074709041153);
                         }
-
+                        */
                         if (moretti == null) return;
 
                         await moretti.SendMessageAsync(
                             $"{e.Author.Username} has tried to send you a message in {e.Channel.Mention}. Contents: \n {e.Message.Content}");
                     }
                 }
-                
+
                 bool contains = false;
 
                 foreach (string bannedWord in bannedWords)
@@ -470,17 +461,17 @@ namespace DiscordBot
                     {
                         await MainGuildLogChannel.SendMessageAsync(
                             $"{e.Author.Username} has messaged a banned word in {e.Channel.Mention}. Message: {e.Message.Content}");
-                    }
-                    if(e.Guild == _emergencyGuild)
+                    }/*
+                    if (e.Guild == _emergencyGuild)
                     {
                         await _emergencyGuildLogChannel.SendMessageAsync(
                             $"{e.Author.Username} has messaged a banned word in {e.Channel.Mention}. Message: {e.Message.Content}");
                     }
-                    if(e.Guild == _govGuild)
+                    if (e.Guild == _govGuild)
                     {
                         await _govLogChannel.SendMessageAsync(
                             $"{e.Author.Username} has messaged a banned word in {e.Channel.Mention}. Message: {e.Message.Content}");
-                    }
+                    }*/
                 }
 
                 if (e.Channel.Id == 704002753185447946)
@@ -490,7 +481,6 @@ namespace DiscordBot
                     string nickName = e.Author.Username;
 
                     SignalR.SendMessageFromAdminChat(nickName, e.Message.Content);
-
                 }
             }
             catch (Exception exception)
@@ -578,7 +568,7 @@ namespace DiscordBot
                             if (discordRole.Id == 704015916047794298 || discordRole.Id == 704015916047794298)
                             {
                                 // Removed from Donators
-                                
+
                                 // Remove Red Emoji
                                 /*await MainGuild.RevokeRoleAsync(e.Member, MainGuild.GetRole(697477618022219778), "No longer wanted the color!");
                                 await MainGuild.RevokeRoleAsync(e.Member, MainGuild.GetRole(697477763791192094),
@@ -594,7 +584,7 @@ namespace DiscordBot
                     }
                 }
             }
-
+            /*
             if (e.Guild == _emergencyGuild)
             {
                 if (e.NicknameAfter != e.NicknameBefore)
@@ -673,7 +663,8 @@ namespace DiscordBot
                     }
                 }
             }
-
+            */
+            /*
             if (e.Guild == _govGuild)
             {
                 if (e.NicknameAfter != e.NicknameBefore)
@@ -751,19 +742,18 @@ namespace DiscordBot
                         return;
                     }
                 }
-            }
+            }*/
         }
 
         private static async Task DiscordOnGuildMemberRemoved(GuildMemberRemoveEventArgs e)
         {
             if (e.Guild == MainGuild)
             {
-
                 await MainGuildLogChannel.SendMessageAsync(
                     $"{e.Member.Nickname} ({e.Member.Username}) has left the guild");
-                
+
                 await e.Member.SendMessageAsync(
-                    $"Sorry to see you go! Please tell us how we can improve on the forums. https://forum.paradigmroleplay.com");
+                    $"Sorry to see you go! Please tell us how we can improve on the forums. https://forum.sol-rp.com");
             }
         }
 
@@ -785,16 +775,16 @@ namespace DiscordBot
                 await _mainGuildJoinChannel.SendMessageAsync(null, false, embedBuilder);
 
                 await e.Member.SendMessageAsync(
-                    $"Welcome to Paradigm Roleplay! For any information on using the bot please use ?help in one of the server channels!");
+                    $"Welcome to Southland Roleplay! For any information on using the bot please use ?help in one of the server channels!");
             }
-/*
-            if (e.Guild == _emergencyGuild)
-            {
-                // If entered emergency guild
+            /*
+                        if (e.Guild == _emergencyGuild)
+                        {
+                            // If entered emergency guild
 
-                await e.Member.SendMessageAsync(
-                    $"Dispatch here, Welcome to Los Santos V Emergency Services Discord! For any information on using the bot please use ?help in one of the server channels!");
-            }*/
+                            await e.Member.SendMessageAsync(
+                                $"Dispatch here, Welcome to Los Santos V Emergency Services Discord! For any information on using the bot please use ?help in one of the server channels!");
+                        }*/
         }
     }
 }
