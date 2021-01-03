@@ -273,33 +273,39 @@ namespace DiscordBot.Commands
         }
 
         [Command("message"), Description("Messages a player from the report"), Hidden]
-        public async Task ReportMessage(CommandContext ctx)
+        public async Task ReportMessage(CommandContext ctx, [RemainingText] string messageText)
         {
-            if (ctx.Channel.Parent != await Program._discord.GetChannelAsync(704011246071971972))
+            try
             {
-                await ctx.Message.DeleteAsync();
+                if (ctx.Channel.Parent != await Program._discord.GetChannelAsync(795085207672848396))
+                {
+                    await ctx.Message.DeleteAsync();
+                    return;
+                }
+
+                string[] channelSplit = ctx.Channel.Name.Split("-");
+
+                bool tryParse = int.TryParse(channelSplit[1], out int channelId);
+
+                if (!tryParse)
+                {
+                    Console.WriteLine($"An error occurred parsing the report channel name: {ctx.Channel.Name}");
+                    return;
+                }
+
+                SignalR.SendMessageToReportPlayer(channelId, messageText);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
                 return;
             }
-
-            string[] channelSplit = ctx.Channel.Name.Split("-");
-
-            bool tryParse = int.TryParse(channelSplit[1], out int channelId);
-
-            if (!tryParse)
-            {
-                Console.WriteLine($"An error occurred parsing the report channel name: {ctx.Channel.Name}");
-                return;
-            }
-
-            string[] messageSplit = ctx.Message.Content.Split("?message");
-
-            SignalR.SendMessageToReportPlayer(channelId, messageSplit[1]);
         }
 
         [Command("cr"), Description("Used to close a report"), Hidden]
         public async Task CloseReport(CommandContext ctx)
         {
-            if (ctx.Channel.Parent != await Program._discord.GetChannelAsync(704011246071971972))
+            if (ctx.Channel.Parent != await Program._discord.GetChannelAsync(795085207672848396))
             {
                 await ctx.Message.DeleteAsync();
                 return;

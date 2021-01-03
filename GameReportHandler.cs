@@ -118,8 +118,21 @@ namespace DiscordBot
 
         public static async void SendReportReply(int reportId, string message)
         {
-            KeyValuePair<ulong, DiscordChannel>? reportChannel =
-                Program.MainGuild.Channels.FirstOrDefault(x => x.Value.Name == $"report-{reportId}" && x.Value.ParentId == 704011246071971972);
+            DiscordChannel reportsCategory = await Program._discord.GetChannelAsync(795085207672848396);
+
+            if (reportsCategory == null)
+            {
+                Console.WriteLine("Reports Category null");
+                return;
+            }
+
+            DiscordChannel reportChannel = reportsCategory.Children.FirstOrDefault(x => x.Name == $"report-{reportId}");
+
+            if (reportChannel == null)
+            {
+                Console.WriteLine("Reports Channel null");
+                return;
+            }
 
             if (reportChannel == null)
             {
@@ -127,7 +140,7 @@ namespace DiscordBot
                 return;
             }
 
-            await reportChannel.Value.Value.SendMessageAsync($"{message}");
+            await reportChannel.SendMessageAsync($"{message}");
         }
     }
 }

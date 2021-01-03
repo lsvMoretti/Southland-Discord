@@ -147,13 +147,272 @@ namespace DiscordBot
 
                 #region Events
 
-                _discord.GuildMemberAdded += DiscordOnGuildMemberAdded;
-                _discord.GuildMemberRemoved += DiscordOnGuildMemberRemoved;
-                _discord.GuildMemberUpdated += DiscordOnGuildMemberUpdated;
-                _discord.MessageCreated += DiscordOnMessageCreated;
-                _discord.MessageDeleted += DiscordOnMessageDeleted;
-                _discord.MessageReactionAdded += DiscordOnMessageReactionAdded;
-                _discord.MessageReactionRemoved += DiscordOnMessageReactionRemoved;
+                #region Member Added
+
+                _discord.GuildMemberAdded += (s, e) =>
+                {
+                    Task.Run(async () =>
+                    {
+                        if (e.Guild == MainGuild)
+                        {
+                            // If entered main guild
+
+                            DiscordEmbedBuilder embedBuilder = new DiscordEmbedBuilder
+                            {
+                                Title = "New User",
+                                Thumbnail = new DiscordEmbedBuilder.EmbedThumbnail { Url = LogoUrl },
+                                Timestamp = DateTimeOffset.Now,
+                                Color = DiscordColor.SpringGreen,
+                                Description = $"Look out! {e.Member.Username} has joined {e.Guild.Name}!"
+                            };
+
+                            await _mainGuildJoinChannel.SendMessageAsync(null, false, embedBuilder);
+
+                            await e.Member.SendMessageAsync(
+                                $"Welcome to Southland Roleplay! For any information on using the bot please use ?help in one of the server channels!\n" +
+                                $"Don't forget to read and react to the rules channel to get full access to the discord!");
+
+                            return;
+                        }
+                    });
+
+                    return Task.CompletedTask;
+                };
+
+                #endregion Member Added
+
+                #region Member Removed
+
+                _discord.GuildMemberRemoved += (s, e) =>
+                {
+                    Task.Run(async () =>
+                    {
+                        if (e.Guild == MainGuild)
+                        {
+                            await MainGuildLogChannel.SendMessageAsync(
+                                $"{e.Member.Nickname} ({e.Member.Username}) has left the guild");
+
+                            await e.Member.SendMessageAsync(
+                                $"Sorry to see you go! Please tell us how we can improve on the forums. https://forum.sol-rp.com");
+                        }
+                    });
+                    return Task.CompletedTask;
+                };
+
+                #endregion Member Removed
+
+                #region Member Updated
+
+                _discord.GuildMemberUpdated += (s, e) =>
+                {
+                    Task.Run(async () =>
+                    {
+                        if (e.Guild == MainGuild)
+                        {
+                            if (e.NicknameAfter != e.NicknameBefore)
+                            {
+                                if (!string.IsNullOrEmpty(e.NicknameBefore) && !string.IsNullOrEmpty(e.NicknameAfter))
+                                {
+                                    await MainGuildLogChannel.SendMessageAsync(
+                                        $"User {e.NicknameBefore} has updated their nickname to {e.NicknameAfter}");
+                                    return;
+                                }
+
+                                if (string.IsNullOrEmpty(e.NicknameBefore))
+                                {
+                                    await MainGuildLogChannel.SendMessageAsync(
+                                        $"User {e.Member.Username} has updated their nickname to {e.NicknameAfter}");
+                                    return;
+                                }
+
+                                if (string.IsNullOrEmpty(e.NicknameAfter))
+                                {
+                                    await MainGuildLogChannel.SendMessageAsync(
+                                        $"User {e.NicknameBefore} has updated their nickname to {e.Member.Username}");
+                                    return;
+                                }
+                            }
+
+                            if (!Equals(e.RolesBefore, e.RolesAfter))
+                            {
+                                if (e.RolesAfter.Count > e.RolesBefore.Count)
+                                {
+                                    // Have more roles, so they've gained.
+
+                                    foreach (DiscordRole discordRole in e.RolesAfter)
+                                    {
+                                        // Loop through roles since change
+
+                                        // Previous role exists so skip
+                                        if (e.RolesBefore.Contains(discordRole)) continue;
+
+                                        string nickName = e.Member.Nickname;
+
+                                        if (string.IsNullOrEmpty(nickName))
+                                        {
+                                            nickName = e.Member.Username;
+                                        }
+
+                                        await MainGuildLogChannel.SendMessageAsync(
+                                            $"{nickName} has been added to the {discordRole.Name} role.");
+                                    }
+
+                                    return;
+                                }
+
+                                if (e.RolesAfter.Count < e.RolesBefore.Count)
+                                {
+                                    // Have less roles than before, so they've lost
+                                    foreach (DiscordRole discordRole in e.RolesBefore)
+                                    {
+                                        // Loop through roles since change
+
+                                        // Previous role exists so skip
+                                        if (e.RolesAfter.Contains(discordRole)) continue;
+
+                                        string nickName = e.Member.Nickname;
+
+                                        if (string.IsNullOrEmpty(nickName))
+                                        {
+                                            nickName = e.Member.Username;
+                                        }
+
+                                        await MainGuildLogChannel.SendMessageAsync(
+                                            $"{nickName} has been removed from the {discordRole.Name} role.");
+
+                                        if (discordRole.Id == 704015916047794298 || discordRole.Id == 704015916047794298)
+                                        {
+                                            // Removed from Donators
+
+                                            // Remove Red Emoji
+                                            /*await MainGuild.RevokeRoleAsync(e.Member, MainGuild.GetRole(697477618022219778), "No longer wanted the color!");
+                                            await MainGuild.RevokeRoleAsync(e.Member, MainGuild.GetRole(697477763791192094),
+                                                "No longer wanted the color!");
+                                            await MainGuild.RevokeRoleAsync(e.Member, MainGuild.GetRole(697478876137521282),
+                                                "No longer wanted the color!");
+                                            await MainGuild.RevokeRoleAsync(e.Member, MainGuild.GetRole(697479141594759188),"Change of color");
+                                            */
+                                        }
+                                    }
+
+                                    return;
+                                }
+                            }
+                        }
+                    });
+
+                    return Task.CompletedTask;
+                };
+
+                #endregion Member Updated
+
+                #region Message Created
+
+                _discord.MessageCreated += (s, e) =>
+                {
+                    Task.Run(async () =>
+                    {
+                        bool contains = false;
+
+                        foreach (string bannedWord in bannedWords)
+                        {
+                            if (e.Message.Content.ToLower().Contains(bannedWord.ToLower()))
+                            {
+                                contains = true;
+                            }
+                        }
+
+                        if (contains && !e.Author.IsBot)
+                        {
+                            await e.Message.DeleteAsync();
+
+                            if (e.Guild == MainGuild)
+                            {
+                                await MainGuildLogChannel.SendMessageAsync(
+                                    $"{e.Author.Username} has messaged a banned word in {e.Channel.Mention}. Message: {e.Message.Content}");
+                            }/*
+                    if (e.Guild == _emergencyGuild)
+                    {
+                        await _emergencyGuildLogChannel.SendMessageAsync(
+                            $"{e.Author.Username} has messaged a banned word in {e.Channel.Mention}. Message: {e.Message.Content}");
+                    }
+                    if (e.Guild == _govGuild)
+                    {
+                        await _govLogChannel.SendMessageAsync(
+                            $"{e.Author.Username} has messaged a banned word in {e.Channel.Mention}. Message: {e.Message.Content}");
+                    }*/
+                        }
+
+                        if (e.Channel.Id == 787791455950471218)
+                        {
+                            if (e.Author.IsBot) return;
+
+                            string nickName = e.Author.Username;
+
+                            SignalR.SendMessageFromAdminChat(nickName, e.Message.Content);
+                        }
+                    });
+
+                    return Task.CompletedTask;
+                };
+
+                #endregion Message Created
+
+                #region Message Deleted
+
+                _discord.MessageDeleted += (s, e) =>
+                {
+                    Task.Run(async () =>
+                    {
+                        if (s == _discord) return;
+
+                        if (e.Guild == MainGuild)
+                        {
+                            await MainGuildLogChannel.SendMessageAsync(
+                                $"A message was deleted from  {e.Channel.Mention}. Contents: {e.Message.Content}. The message was created by: {e.Message.Author.Username} at {e.Message.CreationTimestamp}.");
+                        }
+                    });
+
+                    return Task.CompletedTask;
+                };
+
+                #endregion Message Deleted
+
+                #region Reaction Added
+
+                _discord.MessageReactionAdded += (s, e) =>
+                {
+                    Task.Run(async () =>
+                    {
+                        #region Rules React
+
+                        if (e.Channel.Id == 788176889806061598)
+                        {
+                            // Discord Rules
+                            if (e.Emoji == DiscordEmoji.FromName(_discord, ":jobdone:"))
+                            {
+                                DiscordMember discordMember = MainGuild.GetMemberAsync(e.User.Id).Result;
+
+                                await discordMember.GrantRoleAsync(MainGuild.GetRole(795064838635913236));
+                            }
+                        }
+
+                        #endregion Rules React
+                    });
+
+                    return Task.CompletedTask;
+                };
+
+                #endregion Reaction Added
+
+                #region Reaction Removed
+
+                _discord.MessageReactionRemoved += (s, e) =>
+                {
+                    return Task.CompletedTask;
+                };
+
+                #endregion Reaction Removed
 
                 #endregion Events
 
@@ -290,9 +549,9 @@ namespace DiscordBot
             }
         }
 
-        private static async Task DiscordOnMessageReactionAdded(DiscordClient sender, MessageReactionAddEventArgs e)
+        private static Task DiscordOnMessageReactionAdded(DiscordClient sender, MessageReactionAddEventArgs e)
         {
-            if (e.User.IsBot) return;
+            if (e.User.IsBot) return Task.CompletedTask;
 
             #region Color Reaction
 
@@ -324,21 +583,6 @@ namespace DiscordBot
 
             #endregion Color Reaction
 
-            #region Rules React
-
-            if (e.Channel.Id == 788176889806061598)
-            {
-                // Discord Rules
-                if (e.Emoji == DiscordEmoji.FromName(_discord, ":jobdone:"))
-                {
-                    DiscordMember discordMember = await MainGuild.GetMemberAsync(e.User.Id);
-
-                    await discordMember.GrantRoleAsync(MainGuild.GetRole(795064838635913236));
-                }
-            }
-
-            #endregion Rules React
-
             #region Gov Discord
 
             /*
@@ -355,9 +599,11 @@ namespace DiscordBot
             */
 
             #endregion Gov Discord
+
+            return Task.CompletedTask;
         }
 
-        private static async Task DiscordOnMessageReactionRemoved(DiscordClient sender, MessageReactionRemoveEventArgs e)
+        private static Task DiscordOnMessageReactionRemoved(DiscordClient sender, MessageReactionRemoveEventArgs e)
         {
             #region Color Reaction
 
@@ -391,6 +637,8 @@ namespace DiscordBot
             */
 
             #endregion Color Reaction
+
+            return Task.CompletedTask;
         }
 
         private static async Task DiscordOnMessageDeleted(DiscordClient sender, MessageDeleteEventArgs e)
@@ -414,45 +662,6 @@ namespace DiscordBot
         {
             try
             {
-                bool contains = false;
-
-                foreach (string bannedWord in bannedWords)
-                {
-                    if (e.Message.Content.ToLower().Contains(bannedWord.ToLower()))
-                    {
-                        contains = true;
-                    }
-                }
-
-                if (contains && sender != _discord)
-                {
-                    await e.Message.DeleteAsync();
-
-                    if (e.Guild == MainGuild)
-                    {
-                        await MainGuildLogChannel.SendMessageAsync(
-                            $"{e.Author.Username} has messaged a banned word in {e.Channel.Mention}. Message: {e.Message.Content}");
-                    }/*
-                    if (e.Guild == _emergencyGuild)
-                    {
-                        await _emergencyGuildLogChannel.SendMessageAsync(
-                            $"{e.Author.Username} has messaged a banned word in {e.Channel.Mention}. Message: {e.Message.Content}");
-                    }
-                    if (e.Guild == _govGuild)
-                    {
-                        await _govLogChannel.SendMessageAsync(
-                            $"{e.Author.Username} has messaged a banned word in {e.Channel.Mention}. Message: {e.Message.Content}");
-                    }*/
-                }
-
-                if (e.Channel.Id == 704002753185447946)
-                {
-                    if (e.Author.IsBot) return;
-
-                    string nickName = e.Author.Username;
-
-                    SignalR.SendMessageFromAdminChat(nickName, e.Message.Content);
-                }
             }
             catch (Exception exception)
             {
@@ -463,98 +672,6 @@ namespace DiscordBot
 
         private static async Task DiscordOnGuildMemberUpdated(DiscordClient sender, GuildMemberUpdateEventArgs e)
         {
-            if (e.Guild == MainGuild)
-            {
-                if (e.NicknameAfter != e.NicknameBefore)
-                {
-                    if (!string.IsNullOrEmpty(e.NicknameBefore) && !string.IsNullOrEmpty(e.NicknameAfter))
-                    {
-                        await MainGuildLogChannel.SendMessageAsync(
-                            $"User {e.NicknameBefore} has updated their nickname to {e.NicknameAfter}");
-                        return;
-                    }
-
-                    if (string.IsNullOrEmpty(e.NicknameBefore))
-                    {
-                        await MainGuildLogChannel.SendMessageAsync(
-                            $"User {e.Member.Username} has updated their nickname to {e.NicknameAfter}");
-                        return;
-                    }
-
-                    if (string.IsNullOrEmpty(e.NicknameAfter))
-                    {
-                        await MainGuildLogChannel.SendMessageAsync(
-                            $"User {e.NicknameBefore} has updated their nickname to {e.Member.Username}");
-                        return;
-                    }
-                }
-
-                if (!Equals(e.RolesBefore, e.RolesAfter))
-                {
-                    if (e.RolesAfter.Count > e.RolesBefore.Count)
-                    {
-                        // Have more roles, so they've gained.
-
-                        foreach (DiscordRole discordRole in e.RolesAfter)
-                        {
-                            // Loop through roles since change
-
-                            // Previous role exists so skip
-                            if (e.RolesBefore.Contains(discordRole)) continue;
-
-                            string nickName = e.Member.Nickname;
-
-                            if (string.IsNullOrEmpty(nickName))
-                            {
-                                nickName = e.Member.Username;
-                            }
-
-                            await MainGuildLogChannel.SendMessageAsync(
-                                $"{nickName} has been added to the {discordRole.Name} role.");
-                        }
-
-                        return;
-                    }
-
-                    if (e.RolesAfter.Count < e.RolesBefore.Count)
-                    {
-                        // Have less roles than before, so they've lost
-                        foreach (DiscordRole discordRole in e.RolesBefore)
-                        {
-                            // Loop through roles since change
-
-                            // Previous role exists so skip
-                            if (e.RolesAfter.Contains(discordRole)) continue;
-
-                            string nickName = e.Member.Nickname;
-
-                            if (string.IsNullOrEmpty(nickName))
-                            {
-                                nickName = e.Member.Username;
-                            }
-
-                            await MainGuildLogChannel.SendMessageAsync(
-                                $"{nickName} has been removed from the {discordRole.Name} role.");
-
-                            if (discordRole.Id == 704015916047794298 || discordRole.Id == 704015916047794298)
-                            {
-                                // Removed from Donators
-
-                                // Remove Red Emoji
-                                /*await MainGuild.RevokeRoleAsync(e.Member, MainGuild.GetRole(697477618022219778), "No longer wanted the color!");
-                                await MainGuild.RevokeRoleAsync(e.Member, MainGuild.GetRole(697477763791192094),
-                                    "No longer wanted the color!");
-                                await MainGuild.RevokeRoleAsync(e.Member, MainGuild.GetRole(697478876137521282),
-                                    "No longer wanted the color!");
-                                await MainGuild.RevokeRoleAsync(e.Member, MainGuild.GetRole(697479141594759188),"Change of color");
-                                */
-                            }
-                        }
-
-                        return;
-                    }
-                }
-            }
             /*
             if (e.Guild == _emergencyGuild)
             {
@@ -718,44 +835,6 @@ namespace DiscordBot
 
         private static async Task DiscordOnGuildMemberRemoved(DiscordClient sender, GuildMemberRemoveEventArgs e)
         {
-            if (e.Guild == MainGuild)
-            {
-                await MainGuildLogChannel.SendMessageAsync(
-                    $"{e.Member.Nickname} ({e.Member.Username}) has left the guild");
-
-                await e.Member.SendMessageAsync(
-                    $"Sorry to see you go! Please tell us how we can improve on the forums. https://forum.sol-rp.com");
-            }
-        }
-
-        private static async Task DiscordOnGuildMemberAdded(DiscordClient sender, GuildMemberAddEventArgs e)
-        {
-            if (e.Guild == MainGuild)
-            {
-                // If entered main guild
-
-                DiscordEmbedBuilder embedBuilder = new DiscordEmbedBuilder
-                {
-                    Title = "New User",
-                    Thumbnail = new DiscordEmbedBuilder.EmbedThumbnail { Url = LogoUrl },
-                    Timestamp = DateTimeOffset.Now,
-                    Color = DiscordColor.SpringGreen,
-                    Description = $"Look out! {e.Member.Username} has joined {e.Guild.Name}!"
-                };
-
-                await _mainGuildJoinChannel.SendMessageAsync(null, false, embedBuilder);
-
-                await e.Member.SendMessageAsync(
-                    $"Welcome to Southland Roleplay! For any information on using the bot please use ?help in one of the server channels!");
-            }
-            /*
-                        if (e.Guild == _emergencyGuild)
-                        {
-                            // If entered emergency guild
-
-                            await e.Member.SendMessageAsync(
-                                $"Dispatch here, Welcome to Los Santos V Emergency Services Discord! For any information on using the bot please use ?help in one of the server channels!");
-                        }*/
         }
     }
 }
