@@ -37,7 +37,7 @@ namespace DiscordBot
 
             //await Program.MainGuildReportChannel.SendMessageAsync(embed: discordEmbed);
 
-            DiscordChannel reportCategory = await Program._discord.GetChannelAsync(704011246071971972);
+            DiscordChannel reportCategory = await Program._discord.GetChannelAsync(795085207672848396);
 
             DiscordChannel reportChannel = await Program.MainGuild.CreateChannelAsync($"Report-{reportObject.Id}", ChannelType.Text,
                 reportCategory);
@@ -95,7 +95,7 @@ namespace DiscordBot
 
         public static async void ClearReportChannels()
         {
-            DiscordChannel reportCategory = await Program._discord.GetChannelAsync(704011246071971972);
+            DiscordChannel reportCategory = await Program._discord.GetChannelAsync(795085207672848396);
 
             List<DiscordChannel> discordChannels = reportCategory.Children.ToList();
 
