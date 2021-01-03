@@ -347,6 +347,8 @@ namespace DiscordBot
                         {
                             if (e.Author.IsBot) return;
 
+                            if (e.Message.Content.StartsWith('?')) return;
+
                             string nickName = e.Author.Username;
 
                             SignalR.SendMessageFromAdminChat(nickName, e.Message.Content);
