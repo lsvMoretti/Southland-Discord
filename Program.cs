@@ -326,7 +326,7 @@ namespace DiscordBot
 
             #region Rules React
 
-            if (e.Channel.Id == 788207707177484349)
+            if (e.Channel.Id == 788176889806061598)
             {
                 // Discord Rules
                 if (e.Emoji == DiscordEmoji.FromName(_discord, ":jobdone:"))
