@@ -349,7 +349,12 @@ namespace DiscordBot
 
                             if (e.Message.Content.StartsWith('?')) return;
 
-                            string nickName = e.Author.Username;
+                            if (e.Message.Content.StartsWith('<')) return;
+
+                            DiscordMember member = await e.Guild.GetMemberAsync(e.Author.Id);
+
+                            string nickName = string.IsNullOrEmpty(member.DisplayName) ? member.Username : member
+                                .DisplayName;
 
                             SignalR.SendMessageFromAdminChat(nickName, e.Message.Content);
                         }
