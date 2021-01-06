@@ -339,6 +339,31 @@ namespace DiscordBot.Commands
                 $"{ctx.User.Username} has posted a message as the bot in {channel.Mention}.");
         }
 
+        [Command("mute"), RequirePermissions(Permissions.KickMembers)]
+        public async Task MuteMemberCommand(CommandContext ctx, [Description("The member you wish to mute")] DiscordMember member, [Description("The reason for the mute")][RemainingText] string reason = "")
+        {
+            await ctx.Message.DeleteAsync();
+
+            DiscordChannel logChannel = ctx.Guild.GetChannel(795062350398881832);
+
+            DiscordRole mutedRole = ctx.Guild.GetRole(796163891783663617);
+
+            string adminNick = string.IsNullOrEmpty(ctx.Member.DisplayName) ? ctx.Member.Username : ctx.Member.DisplayName;
+            string nick = string.IsNullOrEmpty(member.DisplayName) ? member.Username : member.DisplayName;
+
+            if (member.Roles.Contains(mutedRole))
+            {
+                await member.RevokeRoleAsync(mutedRole, reason);
+                await logChannel.SendMessageAsync($"{adminNick} has un-muted {nick}.");
+                return;
+            }
+
+            await member.GrantRoleAsync(mutedRole, reason);
+            await logChannel.SendMessageAsync($"{adminNick} has muted {nick}. Reason: {reason}");
+            await member.SendMessageAsync(
+                $"You've been muted in the {ctx.Guild.Name} Discord. Reasoning behind this is: {reason}");
+        }
+
         /*
         [Command("masspm"), RequirePermissions(Permissions.Administrator), Hidden]
         public async Task MassPmCommand(CommandContext ctx, [RemainingText] string message)

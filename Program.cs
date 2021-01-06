@@ -151,7 +151,7 @@ namespace DiscordBot
 
                 _discord.GuildMemberAdded += (s, e) =>
                 {
-                    Task.Run(async () =>
+                    return Task.Factory.StartNew(async () =>
                     {
                         if (e.Guild == MainGuild)
                         {
@@ -175,8 +175,6 @@ namespace DiscordBot
                             return;
                         }
                     });
-
-                    return Task.CompletedTask;
                 };
 
                 #endregion Member Added
@@ -185,7 +183,7 @@ namespace DiscordBot
 
                 _discord.GuildMemberRemoved += (s, e) =>
                 {
-                    Task.Run(async () =>
+                    return Task.Factory.StartNew(async () =>
                     {
                         if (e.Guild == MainGuild)
                         {
@@ -196,7 +194,6 @@ namespace DiscordBot
                                 $"Sorry to see you go! Please tell us how we can improve on the forums. https://forum.sol-rp.com");
                         }
                     });
-                    return Task.CompletedTask;
                 };
 
                 #endregion Member Removed
@@ -205,7 +202,7 @@ namespace DiscordBot
 
                 _discord.GuildMemberUpdated += (s, e) =>
                 {
-                    Task.Run(async () =>
+                    return Task.Factory.StartNew(async () =>
                     {
                         if (e.Guild == MainGuild)
                         {
@@ -300,8 +297,6 @@ namespace DiscordBot
                             }
                         }
                     });
-
-                    return Task.CompletedTask;
                 };
 
                 #endregion Member Updated
@@ -310,7 +305,7 @@ namespace DiscordBot
 
                 _discord.MessageCreated += (s, e) =>
                 {
-                    Task.Run(async () =>
+                    return Task.Factory.StartNew(async () =>
                     {
                         bool contains = false;
 
@@ -359,8 +354,6 @@ namespace DiscordBot
                             SignalR.SendMessageFromAdminChat(nickName, e.Message.Content);
                         }
                     });
-
-                    return Task.CompletedTask;
                 };
 
                 #endregion Message Created
@@ -369,7 +362,7 @@ namespace DiscordBot
 
                 _discord.MessageDeleted += (s, e) =>
                 {
-                    Task.Run(async () =>
+                    return Task.Factory.StartNew(async () =>
                     {
                         if (s == _discord) return;
 
@@ -379,8 +372,6 @@ namespace DiscordBot
                                 $"A message was deleted from  {e.Channel.Mention}. Contents: {e.Message.Content}. The message was created by: {e.Message.Author.Username} at {e.Message.CreationTimestamp}.");
                         }
                     });
-
-                    return Task.CompletedTask;
                 };
 
                 #endregion Message Deleted
@@ -389,7 +380,7 @@ namespace DiscordBot
 
                 _discord.MessageReactionAdded += (s, e) =>
                 {
-                    Task.Run(async () =>
+                    return Task.Factory.StartNew(async () =>
                     {
                         #region Rules React
 
@@ -406,8 +397,6 @@ namespace DiscordBot
 
                         #endregion Rules React
                     });
-
-                    return Task.CompletedTask;
                 };
 
                 #endregion Reaction Added
@@ -452,7 +441,7 @@ namespace DiscordBot
 
         private static void CurrentDomainOnFirstChanceException(object? sender, FirstChanceExceptionEventArgs e)
         {
-            File.WriteAllText($"{Directory.GetCurrentDirectory()}/unhandled.txt", e.Exception.Message);
+            File.WriteAllText($"{Directory.GetCurrentDirectory()}/firstChance.txt", e.Exception.Message);
             Console.WriteLine(e.Exception.Message);
             return;
         }
