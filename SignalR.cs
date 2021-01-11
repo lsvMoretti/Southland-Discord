@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
+using DSharpPlus.Entities;
 using Microsoft.AspNetCore.SignalR.Client;
 
 namespace DiscordBot
@@ -58,6 +59,20 @@ namespace DiscordBot
             hubConnection.On<int, string>("SendReportReply", GameReportHandler.SendReportReply);
 
             #endregion Admin Reports
+
+            hubConnection.On<ulong>("SendLinkedDiscordMessage", SendLinkedMessageToDiscordUser);
+        }
+
+        private static async Task SendLinkedMessageToDiscordUser(ulong discordId)
+        {
+            DiscordUser user = await Program._discord.GetUserAsync(discordId);
+
+            if (user == null) return;
+
+            DiscordMember member = (DiscordMember)user;
+
+            await member.SendMessageAsync(
+                "Your UCP account has been successfully linked to this account. If this is incorrect, please contact a staff member.");
         }
 
         private static Task HubConnection_Reconnected(string arg)

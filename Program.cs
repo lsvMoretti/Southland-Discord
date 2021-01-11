@@ -24,10 +24,11 @@ namespace DiscordBot
 
         private static readonly ulong _mainGuildId = 748851074135490560;
         public static DiscordGuild MainGuild;
-        /*
-        private static readonly ulong _emergencyGuildId = 633766938396590080;
+
+        private static readonly ulong _emergencyGuildId = 797216050429034516;
         private static DiscordGuild _emergencyGuild;
 
+        /*
         private static readonly ulong _govGuildId = 692782773903294566;
         private static DiscordGuild _govGuild;
         */
@@ -44,14 +45,14 @@ namespace DiscordBot
 
         #endregion MainGuildChannels
 
-        /*
-
         #region EmergencyGuildChannels
 
-        private static readonly ulong _emergencyGuildLogChannelId = 668503333878890509;
+        private static readonly ulong _emergencyGuildLogChannelId = 798259039062196275;
         private static DiscordChannel _emergencyGuildLogChannel;
 
         #endregion EmergencyGuildChannels
+
+        /*
 
         #region Gov Guild Channels
 
@@ -97,19 +98,19 @@ namespace DiscordBot
                 });
 
                 MainGuild = await _discord.GetGuildAsync(_mainGuildId);
-                //_emergencyGuild = await _discord.GetGuildAsync(_emergencyGuildId);
+                _emergencyGuild = await _discord.GetGuildAsync(_emergencyGuildId);
                 //_govGuild = await _discord.GetGuildAsync(_govGuildId);
 
                 if (MainGuild != null)
                 {
                     Console.WriteLine($"Connected to {MainGuild.Name} Discord Guild.");
                 }
-                /*
+
                 if (_emergencyGuild != null)
                 {
                     Console.WriteLine($"Connected to {_emergencyGuild.Name} Discord Guild");
                 }
-
+                /*
                 if (_govGuild != null)
                 {
                     Console.WriteLine($"Connected to {_govGuild.Name} Discord Guild");
@@ -123,8 +124,6 @@ namespace DiscordBot
 
                 #endregion Main Guild Channels
 
-                /*
-
                 #region Emergency Guild Channels
 
                 if (_emergencyGuild != null)
@@ -133,6 +132,8 @@ namespace DiscordBot
                 }
 
                 #endregion Emergency Guild Channels
+
+                /*
 
                 #region Gov Guild Channels
 
@@ -325,12 +326,12 @@ namespace DiscordBot
                             {
                                 await MainGuildLogChannel.SendMessageAsync(
                                     $"{e.Author.Username} has messaged a banned word in {e.Channel.Mention}. Message: {e.Message.Content}");
+                            }
+                            if (e.Guild == _emergencyGuild)
+                            {
+                                await _emergencyGuildLogChannel.SendMessageAsync(
+                                    $"{e.Author.Username} has messaged a banned word in {e.Channel.Mention}. Message: {e.Message.Content}");
                             }/*
-                    if (e.Guild == _emergencyGuild)
-                    {
-                        await _emergencyGuildLogChannel.SendMessageAsync(
-                            $"{e.Author.Username} has messaged a banned word in {e.Channel.Mention}. Message: {e.Message.Content}");
-                    }
                     if (e.Guild == _govGuild)
                     {
                         await _govLogChannel.SendMessageAsync(
@@ -668,7 +669,6 @@ namespace DiscordBot
 
         private static async Task DiscordOnGuildMemberUpdated(DiscordClient sender, GuildMemberUpdateEventArgs e)
         {
-            /*
             if (e.Guild == _emergencyGuild)
             {
                 if (e.NicknameAfter != e.NicknameBefore)
@@ -747,7 +747,7 @@ namespace DiscordBot
                     }
                 }
             }
-            */
+
             /*
             if (e.Guild == _govGuild)
             {
