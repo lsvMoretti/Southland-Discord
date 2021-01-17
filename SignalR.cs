@@ -10,7 +10,7 @@ namespace DiscordBot
     {
         private static HubConnection hubConnection;
 
-        public static async void StartConnection()
+        public static async Task StartConnection()
         {
             Console.WriteLine($"Starting SignalR Hub Connection");
 

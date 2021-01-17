@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Net.Http;
+using System.Threading;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
@@ -10,11 +11,15 @@ using DiscordBot.Commands;
 using DiscordBot.Services;
 using Microsoft.Extensions.DependencyInjection;
 
+public class Service : ServiceBase
+{
+}
+
 public class Program
 {
     public static DiscordSocketClient Discord;
     public static readonly string LogoUri = "https://sol-rp.com/southland-logo.png";
-    public static readonly CommandService CommandService;
+    private const string ServiceName = "SouthlandDiscord";
 
     #region Guilds
 
@@ -44,27 +49,54 @@ public class Program
 
     public async Task MainAsync()
     {
-        await using (var services = ConfigureServices())
-        {
-            Discord = services.GetRequiredService<DiscordSocketClient>();
+        Console.WriteLine("Starting Discord Bot");
 
-            Discord.Log += Log;
+        Console.Title = "Southland Roleplay Discord Bot";
 
-            services.GetRequiredService<CommandService>().Log += Log;
+        WeatherUpdate.InitWeatherUpdate();
+        await SignalR.StartConnection();
 
-            await Discord.LoginAsync(TokenType.Bot, Settings.Default.Token);
-            await Discord.StartAsync();
+        await using var services = ConfigureServices();
 
-            await services.GetRequiredService<CommandHandlingService>().InitializeAsync();
-        }
+        var _config = new DiscordSocketConfig { MessageCacheSize = 100 };
 
+        Discord = services.GetRequiredService<DiscordSocketClient>();
+
+        Discord.Log += Log;
+
+        services.GetRequiredService<CommandService>().Log += Log;
+
+        await Discord.LoginAsync(TokenType.Bot, Settings.Default.Token);
+        await Discord.StartAsync();
+
+        await services.GetRequiredService<CommandHandlingService>().InitializeAsync();
+
+        #region Events
+
+        Discord.Ready += DiscordOnReady;
+        Discord.UserJoined += DiscordOnUserJoined;
+        Discord.UserLeft += DiscordOnUserLeft;
+        Discord.GuildMemberUpdated += DiscordOnGuildMemberUpdated;
+
+        Discord.MessageReceived += DiscordOnMessageReceived;
+        Discord.MessageDeleted += DiscordOnMessageDeleted;
+
+        Discord.ReactionAdded += DiscordOnReactionAdded;
+
+        #endregion Events
+
+        await Task.Delay(Timeout.Infinite);
+    }
+
+    private Task DiscordOnReady()
+    {
         MainGuild = Discord.GetGuild(MainGuildId);
         EmergencyGuild = Discord.GetGuild(EmergencyGuildId);
 
         if (MainGuild == null)
         {
             Console.WriteLine($"Unable to connect to the Main Guild!");
-            return;
+            return Task.CompletedTask;
         }
 
         if (MainGuild != null)
@@ -75,7 +107,7 @@ public class Program
         if (EmergencyGuild == null)
         {
             Console.WriteLine($"Unable to connect to the Emergency Guild");
-            return;
+            return Task.CompletedTask;
         }
 
         if (EmergencyGuild != null)
@@ -89,36 +121,32 @@ public class Program
 
         EmergencyGuildLogChannel = EmergencyGuild.GetTextChannel(EmergencyGuildLogChannelId);
 
-        #region Events
-
-        Discord.UserJoined += DiscordOnUserJoined;
-        Discord.UserLeft += DiscordOnUserLeft;
-        Discord.GuildMemberUpdated += DiscordOnGuildMemberUpdated;
-
-        Discord.MessageReceived += DiscordOnMessageReceived;
-        Discord.MessageDeleted += DiscordOnMessageDeleted;
-
-        Discord.ReactionAdded += DiscordOnReactionAdded;
-
-        #endregion Events
-
-        await Task.Delay(-1);
+        return Task.CompletedTask;
     }
 
     private async Task DiscordOnReactionAdded(Cacheable<IUserMessage, ulong> cachedMessage, ISocketMessageChannel channel, SocketReaction reaction)
     {
-        if (!cachedMessage.HasValue) return;
-        var message = cachedMessage.Value;
-
         #region Rules React
 
         if (channel.Id == 788176889806061598)
         {
-            if (reaction.Emote.Name == ":jobdone:")
-            {
-                SocketGuildUser user = MainGuild.GetUser(reaction.UserId);
+            Console.WriteLine(reaction.Emote.Name);
 
-                IRole role = MainGuild.GetRole(795064838635913236);
+            if (reaction.Emote.Name == "jobdone")
+            {
+                SocketGuildUser user = MainGuild.GetUser(reaction.User.Value.Id);
+
+                if (user == null)
+                {
+                    return;
+                }
+
+                SocketRole role = MainGuild.GetRole(795064838635913236);
+
+                if (role == null)
+                {
+                    return;
+                }
 
                 await user.AddRoleAsync(role);
             }

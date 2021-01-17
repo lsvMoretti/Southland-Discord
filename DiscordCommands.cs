@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
+using DiscordBot.Services;
 using Server.Extensions.Weather;
 using TwitchLib.Api.V5.Models.Users;
 
@@ -17,6 +18,8 @@ namespace DiscordBot.Commands
 {
     public class DiscordCommands : ModuleBase<SocketCommandContext>
     {
+        public PictureService PictureService { get; set; }
+
         [Command("ping")]
         [Alias("pong", "hello")]
         [RequireContext(ContextType.Guild)]
@@ -24,7 +27,7 @@ namespace DiscordBot.Commands
 
         [Command("random")]
         [RequireContext(ContextType.Guild)]
-        public async Task DiscordCommandRandom(CommandContext Context, int min, int max)
+        public async Task DiscordCommandRandom(int min, int max)
         {
             Random rnd = new Random();
 
@@ -63,7 +66,7 @@ namespace DiscordBot.Commands
 
         [Command("myid")]
         [RequireContext(ContextType.Guild)]
-        public Task DiscordCommandMyId() => ReplyAsync($"Your ID is {Context.User.Id}");
+        public Task DiscordCommandMyId() => ReplyAsync($"{Context.User.Mention} Your ID is {Context.User.Id}");
 
         [Command("player"), Alias("players")]
         [RequireContext(ContextType.Guild)]
@@ -80,7 +83,7 @@ namespace DiscordBot.Commands
 
         [Command("bug")]
         [RequireContext(ContextType.Guild)]
-        public async Task DiscordCommandBug(CommandContext Context)
+        public async Task DiscordCommandBug()
         {
             await Context.Channel.TriggerTypingAsync();
 
@@ -89,7 +92,7 @@ namespace DiscordBot.Commands
 
         [Command("activity")]
         [RequireContext(ContextType.Guild)]
-        public async Task DiscordActivityCommand(CommandContext Context)
+        public async Task DiscordActivityCommand()
         {
             if (Context.Channel.Id != 787791455950471218)
             {
@@ -127,7 +130,7 @@ namespace DiscordBot.Commands
 
         [Command("weather"), Alias("time")]
         [RequireContext(ContextType.Guild)]
-        public async Task DiscordCommandShowWeather(CommandContext Context)
+        public async Task DiscordCommandShowWeather()
         {
             try
             {
