@@ -2,7 +2,6 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <RuntimeIdentifier>win7-x64</RuntimeIdentifier>
     <TargetFramework>netcoreapp5.0</TargetFramework>
     <AssemblyVersion>1.0.42.11</AssemblyVersion>
     <FileVersion>1.0.42.11</FileVersion>
