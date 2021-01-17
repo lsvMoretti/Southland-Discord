@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
-using DSharpPlus.Entities;
+using Discord;
+using Discord.WebSocket;
 using Microsoft.AspNetCore.SignalR.Client;
 
 namespace DiscordBot
@@ -65,13 +66,17 @@ namespace DiscordBot
 
         private static async Task SendLinkedMessageToDiscordUser(ulong discordId)
         {
-            DiscordUser user = await Program._discord.GetUserAsync(discordId);
+            Console.WriteLine($"Send Linked Message To Discord User -- ID: {discordId}");
 
-            if (user == null) return;
+            SocketUser user = Program.Discord.GetUser(discordId);
 
-            DiscordMember member = (DiscordMember)user;
+            if (user == null)
+            {
+                Console.WriteLine("User not found");
+                return;
+            }
 
-            await member.SendMessageAsync(
+            await user.SendMessageAsync(
                 "Your UCP account has been successfully linked to this account. If this is incorrect, please contact a staff member.");
         }
 

@@ -2,8 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Timers;
-using DSharpPlus;
-using DSharpPlus.Entities;
+using Discord;
+using Discord.Rest;
+using Discord.WebSocket;
 using Newtonsoft.Json;
 
 namespace DiscordBot
@@ -11,7 +12,7 @@ namespace DiscordBot
     public class GameReportHandler
     {
         public static List<AdminReportObject> AdminReports = new List<AdminReportObject>();
-        public static Dictionary<int, DiscordChannel> ReportChannels = new Dictionary<int, DiscordChannel>();
+        public static Dictionary<int, RestTextChannel> ReportChannels = new Dictionary<int, RestTextChannel>();
 
         public static async void AddAdminReport(string reportJson)
         {
@@ -21,11 +22,11 @@ namespace DiscordBot
 
             AdminReports.Add(reportObject);
 
-            DiscordEmbedBuilder discordEmbed = new DiscordEmbedBuilder
+            EmbedBuilder discordEmbed = new EmbedBuilder
             {
-                Color = DiscordColor.Blue,
+                Color = Color.Blue,
                 Description = reportObject.Message,
-                Thumbnail = new DiscordEmbedBuilder.EmbedThumbnail { Url = Program.LogoUrl },
+                ThumbnailUrl = Program.LogoUri,
                 Timestamp = reportObject.Time,
                 Title = "New Report"
             };
@@ -35,19 +36,21 @@ namespace DiscordBot
             discordEmbed.AddField("Character ID", $"{reportObject.CharacterId}");
             discordEmbed.AddField("Character Name", $"{reportObject.CharacterName}");
 
-            //await Program.MainGuildReportChannel.SendMessageAsync(embed: discordEmbed);
+            var reportCategory = Program.MainGuild.CategoryChannels.FirstOrDefault(x => x.Id == 795085207672848396);
 
-            DiscordChannel reportCategory = await Program._discord.GetChannelAsync(795085207672848396);
-
-            DiscordChannel reportChannel = await Program.MainGuild.CreateChannelAsync($"Report-{reportObject.Id}", ChannelType.Text,
-                reportCategory);
+            RestTextChannel reportChannel = await Program.MainGuild.CreateTextChannelAsync($"Report-{reportObject.Id}",
+                properties =>
+                {
+                    properties.CategoryId = reportCategory.Id;
+                    properties.Topic = $"Report Channel for {reportObject.CharacterName}";
+                });
 
             if (!ReportChannels.ContainsKey(reportObject.Id))
             {
                 ReportChannels.Add(reportObject.Id, reportChannel);
             }
 
-            await reportChannel.SendMessageAsync(embed: discordEmbed);
+            await reportChannel.SendMessageAsync(embed: discordEmbed.Build());
             await reportChannel.SendMessageAsync($"Commands: ?message to reply, ?cr to close the report");
         }
 
@@ -61,7 +64,7 @@ namespace DiscordBot
 
                 AdminReports.Remove(listObject);
 
-                bool tryGetChannel = ReportChannels.TryGetValue(reportObject.Id, out DiscordChannel reportChannel);
+                bool tryGetChannel = ReportChannels.TryGetValue(reportObject.Id, out RestTextChannel reportChannel);
 
                 if (!tryGetChannel) return;
 
@@ -78,12 +81,9 @@ namespace DiscordBot
                 {
                     timer.Stop();
 
-                    DiscordChannel discordReportChannel = Program._discord.GetChannelAsync(reportChannel.Id).Result;
+                    ITextChannel discordReportChannel = Program.MainGuild.GetTextChannel(reportChannel.Id);
 
-                    if (discordReportChannel != null)
-                    {
-                        discordReportChannel.DeleteAsync();
-                    }
+                    discordReportChannel?.DeleteAsync();
                 };
             }
             catch (Exception e)
@@ -95,13 +95,13 @@ namespace DiscordBot
 
         public static async void ClearReportChannels()
         {
-            DiscordChannel reportCategory = await Program._discord.GetChannelAsync(795085207672848396);
+            var reportCategory = Program.MainGuild.CategoryChannels.FirstOrDefault(x => x.Id == 795085207672848396);
 
-            List<DiscordChannel> discordChannels = reportCategory.Children.ToList();
+            var discordChannels = reportCategory.Channels.ToList();
 
-            foreach (DiscordChannel discordChannel in discordChannels)
+            foreach (var discordChannel in discordChannels)
             {
-                await discordChannel.DeleteAsync("Server Restart");
+                await discordChannel.DeleteAsync();
             }
 
             AdminReports = new List<AdminReportObject>();
@@ -118,7 +118,7 @@ namespace DiscordBot
 
         public static async void SendReportReply(int reportId, string message)
         {
-            DiscordChannel reportsCategory = await Program._discord.GetChannelAsync(795085207672848396);
+            var reportsCategory = Program.MainGuild.CategoryChannels.FirstOrDefault(x => x.Id == 795085207672848396);
 
             if (reportsCategory == null)
             {
@@ -126,13 +126,9 @@ namespace DiscordBot
                 return;
             }
 
-            DiscordChannel reportChannel = reportsCategory.Children.FirstOrDefault(x => x.Name == $"report-{reportId}");
+            var reportChannel = reportsCategory.Channels.FirstOrDefault(x => x.Name == $"report-{reportId}");
 
-            if (reportChannel == null)
-            {
-                Console.WriteLine("Reports Channel null");
-                return;
-            }
+            var socketTextChannel = reportChannel as SocketTextChannel;
 
             if (reportChannel == null)
             {
@@ -140,7 +136,7 @@ namespace DiscordBot
                 return;
             }
 
-            await reportChannel.SendMessageAsync($"{message}");
+            if (socketTextChannel != null) await socketTextChannel.SendMessageAsync($"{message}");
         }
     }
 }

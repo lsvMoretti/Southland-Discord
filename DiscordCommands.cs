@@ -1,55 +1,50 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.ComponentModel.Design;
 using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using DSharpPlus;
-using DSharpPlus.CommandsNext;
-using DSharpPlus.CommandsNext.Attributes;
-using DSharpPlus.Entities;
+using Discord;
+using Discord.Commands;
+using Discord.WebSocket;
 using Server.Extensions.Weather;
 using TwitchLib.Api.V5.Models.Users;
 
 namespace DiscordBot.Commands
 {
-    public class DiscordCommands : BaseCommandModule
+    public class DiscordCommands : ModuleBase<SocketCommandContext>
     {
-        [DSharpPlus.CommandsNext.Attributes.Command("ping")]
-        public async Task DiscordCommandPing(CommandContext ctx)
-        {
-            await ctx.TriggerTypingAsync();
-
-            await ctx.RespondAsync($"Pong! {ctx.User.Mention}");
-
-            await Task.CompletedTask;
-        }
+        [Command("ping")]
+        [Alias("pong", "hello")]
+        [RequireContext(ContextType.Guild)]
+        public Task PingAsync() => ReplyAsync("pong!");
 
         [Command("random")]
-        public async Task DiscordCommandRandom(CommandContext ctx, int min, int max)
+        [RequireContext(ContextType.Guild)]
+        public async Task DiscordCommandRandom(CommandContext Context, int min, int max)
         {
             Random rnd = new Random();
-            await ctx.RespondAsync($"{ctx.User.Mention} Your number is: {rnd.Next(min, max)}");
 
-            await Task.CompletedTask;
+            await ReplyAsync($"{Context.User.Mention} Your number is: {rnd.Next(min, max)}");
         }
 
-        [Command("newplayer"), Aliases("np")]
-        public async Task DiscordCommandNewPlayer(CommandContext ctx, DiscordUser mentionedUser = null)
+        [Command("newplayer"), Alias("np")]
+        [RequireContext(ContextType.Guild)]
+        public async Task DiscordCommandNewPlayer(IGuildUser mentionedUser = null)
         {
-            await ctx.Message.DeleteAsync();
-            await ctx.TriggerTypingAsync();
+            await Context.Message.DeleteAsync();
+            await Context.Channel.TriggerTypingAsync();
 
-            DiscordEmbedBuilder embedBuilder = new DiscordEmbedBuilder();
-
-            embedBuilder.Title = "Welcome";
-            embedBuilder.Thumbnail = new DiscordEmbedBuilder.EmbedThumbnail { Url = Program.LogoUrl };
-            embedBuilder.Timestamp = DateTime.Now;
-            embedBuilder.Color = DiscordColor.DarkBlue;
-
-            DateTime dateTime = DateTime.Now;
+            EmbedBuilder embedBuilder = new EmbedBuilder
+            {
+                Title = "Welcome",
+                ThumbnailUrl = Program.LogoUri,
+                Timestamp = DateTime.Now,
+                Color = Color.DarkBlue
+            };
 
             embedBuilder.Description = mentionedUser != null
                 ? $"Welcome to Southland Roleplay {mentionedUser.Mention}, We are proud to have you with us! Our server is under a restructure!"
@@ -60,64 +55,57 @@ namespace DiscordBot.Commands
 
             if (mentionedUser != null)
             {
-                await ctx.RespondAsync(mentionedUser.Mention);
+                await ReplyAsync(mentionedUser.Mention);
             }
 
-            await ctx.RespondAsync(null, false, embedBuilder);
-
-            await Task.CompletedTask;
+            await ReplyAsync(null, false, embedBuilder.Build());
         }
 
         [Command("myid")]
-        public async Task DiscordCommandMyId(CommandContext ctx)
+        [RequireContext(ContextType.Guild)]
+        public Task DiscordCommandMyId() => ReplyAsync($"Your ID is {Context.User.Id}");
+
+        [Command("player"), Alias("players")]
+        [RequireContext(ContextType.Guild)]
+        public async Task DiscordCommandOnlinePlayers()
         {
-            await ctx.Message.DeleteAsync();
+            if (Context.Channel.Id != 787791455950471218) return;
 
-            await ctx.Member.SendMessageAsync($"Your Discord ID is {ctx.Member.Id}");
-
-            await Task.CompletedTask;
-        }
-
-        [Command("player"), Aliases("players")]
-        public async Task DiscordCommandOnlinePlayers(CommandContext ctx)
-        {
-            if (ctx.Channel.Id != 787791455950471218) return;
-
-            await ctx.TriggerTypingAsync();
+            await Context.Channel.TriggerTypingAsync();
 
             int playerCount = await SignalR.FetchOnlinePlayerCount();
 
-            await ctx.RespondAsync($"Current Player Count: {playerCount}");
+            await ReplyAsync($"Current Player Count: {playerCount}");
         }
 
         [Command("bug")]
-        public async Task DiscordCommandBug(CommandContext ctx)
+        [RequireContext(ContextType.Guild)]
+        public async Task DiscordCommandBug(CommandContext Context)
         {
-            await ctx.TriggerTypingAsync();
+            await Context.Channel.TriggerTypingAsync();
 
-            await ctx.RespondAsync($"Bugs can be reported on our forums over at https://forum.sol-rp.com/threads/bug-report-format.11/unread");
-
-            await Task.CompletedTask;
+            await ReplyAsync($"Bugs can be reported on our forums over at https://forum.sol-rp.com/threads/bug-report-format.11/unread");
         }
 
         [Command("activity")]
-        public async Task DiscordActivityCommand(CommandContext ctx)
+        [RequireContext(ContextType.Guild)]
+        public async Task DiscordActivityCommand(CommandContext Context)
         {
-            if (ctx.Channel.Id != 787791455950471218)
+            if (Context.Channel.Id != 787791455950471218)
             {
-                await ctx.Message.DeleteAsync("Incorrect Channel");
+                await Context.Message.DeleteAsync();
                 return;
             }
 
-            await ctx.TriggerTypingAsync();
+            await Context.Channel.TriggerTypingAsync();
 
             if (!ServerHandler.GameActivityList.Any())
             {
-                await ctx.RespondAsync("There has been no activity!");
+                await ReplyAsync("There has been no activity!");
                 return;
             }
 
-            await ctx.RespondAsync($"Fetching the last {ServerHandler.GameActivityList.Count} Game Server Activities!");
+            await ReplyAsync($"Fetching the last {ServerHandler.GameActivityList.Count} Game Server Activities!");
 
             string message = "";
 
@@ -134,21 +122,22 @@ namespace DiscordBot.Commands
                 }
             }
 
-            await ctx.RespondAsync(message);
+            await ReplyAsync(message);
         }
 
-        [Command("weather"), Aliases("time")]
-        public async Task DiscordCommandShowWeather(CommandContext ctx)
+        [Command("weather"), Alias("time")]
+        [RequireContext(ContextType.Guild)]
+        public async Task DiscordCommandShowWeather(CommandContext Context)
         {
             try
             {
-                await ctx.TriggerTypingAsync();
+                await Context.Channel.TriggerTypingAsync();
 
                 OpenWeather currentWeather = WeatherUpdate.CurrentWeather;
 
                 if (currentWeather == null)
                 {
-                    await ctx.RespondAsync($"Unable to fetch latest weather! Sorry {ctx.User.Mention}");
+                    await ReplyAsync($"Unable to fetch latest weather! Sorry {Context.User.Mention}");
                     return;
                 }
 
@@ -163,12 +152,12 @@ namespace DiscordBot.Commands
                 CultureInfo cultureInfo = Thread.CurrentThread.CurrentCulture;
                 TextInfo textInfo = cultureInfo.TextInfo;
 
-                DiscordEmbedBuilder embedBuilder = new DiscordEmbedBuilder
+                EmbedBuilder embedBuilder = new EmbedBuilder
                 {
                     Author = null,
-                    Color = DiscordColor.Cyan,
+                    Color = Color.Blue,
                     Description = $"Current Weather: {textInfo.ToTitleCase(currentWeather.weather.FirstOrDefault().description)}",
-                    Thumbnail = new DiscordEmbedBuilder.EmbedThumbnail { Url = $"https://openweathermap.org/img/wn/{currentWeather.weather.FirstOrDefault()?.icon}.png" },
+                    ThumbnailUrl = $"https://openweathermap.org/img/wn/{currentWeather.weather.FirstOrDefault()?.icon}.png",
                     Timestamp = DateTimeOffset.Now,
                     Title = "Current Weather for Los Santos",
                 };
@@ -188,7 +177,7 @@ namespace DiscordBot.Commands
 
                 embedBuilder.AddField("Time", $"{serverTime[0]:D2}:{serverTime[1]:D2} (({localTime.Hour:D2}:{localTime.Minute:D2}))", true);
 
-                await ctx.RespondAsync(embed: embedBuilder);
+                await ReplyAsync(embed: embedBuilder.Build());
             }
             catch (Exception e)
             {
@@ -199,31 +188,32 @@ namespace DiscordBot.Commands
 
         /*
                 [Command("removeplayerrole")]
-                public async Task DiscordCommandRemovePlayerRole(CommandContext ctx)
+                public async Task DiscordCommandRemovePlayerRole(CommandContext Context)
                 {
-                    if (ctx.Channel.Id == 703688837641273485)
+                    if (Context.Channel.Id == 703688837641273485)
                     {
                         int count = 0;
 
-                        List<DiscordMember> members = ctx.Guild.Members.ToList();
+                        List<DiscordMember> members = Context.Guild.Members.ToList();
 
                         foreach (DiscordMember discordMember in members)
                         {
                             if (discordMember == null) continue;
 
-                            await discordMember.RevokeRoleAsync(ctx.Guild.GetRole(665692452086218754));
+                            await discordMember.RevokeRoleAsync(Context.Guild.GetRole(665692452086218754));
                             count++;
                         }
 
-                        await ctx.RespondAsync($"Removed {count} members from the players role.");
+                        await ReplyAsync($"Removed {count} members from the players role.");
                     }
                 }
         */
 
         [Command("uptime")]
-        public async Task DiscordCommandUptime(CommandContext ctx)
+        [RequireContext(ContextType.Guild)]
+        public async Task DiscordCommandUptime()
         {
-            await ctx.TriggerTypingAsync();
+            await Context.Channel.TriggerTypingAsync();
 
             DateTime startTime = await SignalR.FetchServerStartTime();
 
@@ -233,63 +223,68 @@ namespace DiscordBot.Commands
 
             Console.WriteLine($"Uptime: {upTime}");
 
-            await ctx.RespondAsync(
+            await ReplyAsync(
                 $"Server Up Time: {upTime.Days:D1} Days, {upTime.Hours:D1} Hours, {upTime.Minutes:D1} Minutes!");
         }
 
-        [Command("wipe"), Description("Wipes all messages"), Hidden]
-        [RequirePermissions(Permissions.Administrator)]
-        public async Task WipeCommand(CommandContext ctx, int wipeCount = 0)
+        [Command("wipe"), Description("Wipes all messages")]
+        [RequireContext(ContextType.Guild)]
+        [RequireUserPermission(GuildPermission.ManageMessages)]
+        public async Task WipeCommand(int wipeCount = 0)
         {
             if (wipeCount == 0)
             {
                 int count = 0;
 
-                foreach (DiscordMessage discordMessage in await ctx.Channel.GetMessagesAsync())
+                foreach (SocketMessage cachedMessage in Context.Channel.GetCachedMessages())
                 {
-                    await ctx.Channel.DeleteMessageAsync(discordMessage);
+                    await cachedMessage.DeleteAsync();
                     count++;
                 }
+
                 await Program.MainGuildLogChannel.SendMessageAsync(
-                    $"{ctx.User.Mention} has deleted {count} messages from {ctx.Channel.Mention}.");
+                    $"{Context.User.Mention} has deleted {count} messages from {Context.Channel.Name}.");
 
                 return;
             }
 
-            IReadOnlyList<DiscordMessage> messages = await ctx.Channel.GetMessagesAsync();
+            var messages = Context.Channel.GetCachedMessages().ToList();
 
-            List<DiscordMessage> messageList = messages.Skip(Math.Max(0, messages.Count - wipeCount)).ToList();
+            var messageList = messages.SkipLast(wipeCount);
 
             int totalWiped = 0;
 
-            foreach (DiscordMessage discordMessage in messageList)
+            foreach (var discordMessage in messageList)
             {
-                await ctx.Channel.DeleteMessageAsync(discordMessage);
+                await Context.Channel.DeleteMessageAsync(discordMessage);
                 totalWiped++;
             }
 
             await Program.MainGuildLogChannel.SendMessageAsync(
-                $"{ctx.Member.Username} has wiped the last {totalWiped / wipeCount} messages from {ctx.Channel.Mention}.");
+                $"{Context.User.Username} has wiped the last {totalWiped / wipeCount} messages from {Context.Channel.Name}.");
         }
 
-        [Command("message"), Description("Messages a player from the report"), Hidden]
-        public async Task ReportMessage(CommandContext ctx, [RemainingText] string messageText)
+        [Command("message"), Description("Messages a player from the report")]
+        [RequireContext(ContextType.Guild)]
+        public async Task ReportMessage([Remainder] string messageText)
         {
             try
             {
-                if (ctx.Channel.Parent != await Program._discord.GetChannelAsync(795085207672848396))
+                SocketCategoryChannel categoryChannel = Context.Guild.GetCategoryChannel(795085207672848396);
+
+                if (categoryChannel.Channels.All(x => x.Id != Context.Channel.Id))
                 {
-                    await ctx.Message.DeleteAsync();
+                    await Context.Message.DeleteAsync();
                     return;
                 }
 
-                string[] channelSplit = ctx.Channel.Name.Split("-");
+                string[] channelSplit = Context.Channel.Name.Split("-");
 
                 bool tryParse = int.TryParse(channelSplit[1], out int channelId);
 
                 if (!tryParse)
                 {
-                    Console.WriteLine($"An error occurred parsing the report channel name: {ctx.Channel.Name}");
+                    Console.WriteLine($"An error occurred parsing the report channel name: {Context.Channel.Name}");
                     return;
                 }
 
@@ -302,22 +297,25 @@ namespace DiscordBot.Commands
             }
         }
 
-        [Command("cr"), Description("Used to close a report"), Hidden]
-        public async Task CloseReport(CommandContext ctx)
+        [Command("cr"), Description("Used to close a report")]
+        [RequireContext(ContextType.Guild)]
+        public async Task CloseReport()
         {
-            if (ctx.Channel.Parent != await Program._discord.GetChannelAsync(795085207672848396))
+            SocketCategoryChannel categoryChannel = Context.Guild.GetCategoryChannel(795085207672848396);
+
+            if (categoryChannel.Channels.All(x => x.Id != Context.Channel.Id))
             {
-                await ctx.Message.DeleteAsync();
+                await Context.Message.DeleteAsync();
                 return;
             }
 
-            string[] channelSplit = ctx.Channel.Name.Split("-");
+            string[] channelSplit = Context.Channel.Name.Split("-");
 
             bool tryParse = int.TryParse(channelSplit[1], out int channelId);
 
             if (!tryParse)
             {
-                Console.WriteLine($"An error occurred parsing the report channel name: {ctx.Channel.Name}");
+                Console.WriteLine($"An error occurred parsing the report channel name: {Context.Channel.Name}");
                 return;
             }
 
@@ -325,82 +323,50 @@ namespace DiscordBot.Commands
 
             GameReportHandler.ClearReport(channelId);
 
-            await ctx.Channel.DeleteAsync($"Report Closed by {ctx.User.Username}");
+            Context.Guild.GetTextChannel(Context.Channel.Id)?.DeleteAsync();
         }
 
-        [Command("post"), RequirePermissions(Permissions.Administrator), Hidden]
-        public async Task PostMessageCommand(CommandContext ctx, DiscordChannel channel, [RemainingText] string message)
+        [Command("post")]
+        [RequireContext(ContextType.Guild)]
+        [RequireUserPermission(GuildPermission.Administrator)]
+        public async Task PostMessageCommand(ITextChannel channel, [Remainder] string message)
         {
-            if (ctx.Guild != Program.MainGuild) return;
+            if (Context.Guild != Program.MainGuild) return;
 
-            DiscordMessage discordMessage = await channel.SendMessageAsync(message);
+            await channel.SendMessageAsync(message);
 
             await Program.MainGuildLogChannel.SendMessageAsync(
-                $"{ctx.User.Username} has posted a message as the bot in {channel.Mention}.");
+                $"{Context.User.Username} has posted a message as the bot in {channel.Name}.");
         }
 
-        [Command("mute"), RequirePermissions(Permissions.KickMembers)]
-        public async Task MuteMemberCommand(CommandContext ctx, [Description("The member you wish to mute")] DiscordMember member, [Description("The reason for the mute")][RemainingText] string reason = "")
+        [Command("mute")]
+        [RequireContext(ContextType.Guild)]
+        [RequireUserPermission(GuildPermission.KickMembers)]
+        public async Task MuteMemberCommand(IGuildUser member, [Remainder] string reason = "")
         {
-            await ctx.Message.DeleteAsync();
+            await Context.Message.DeleteAsync();
 
-            DiscordChannel logChannel = ctx.Guild.GetChannel(795062350398881832);
+            SocketRole mutedRole = Context.Guild.GetRole(796163891783663617);
 
-            DiscordRole mutedRole = ctx.Guild.GetRole(796163891783663617);
+            SocketGuildUser adminUser = (SocketGuildUser)Context.User;
 
-            string adminNick = string.IsNullOrEmpty(ctx.Member.DisplayName) ? ctx.Member.Username : ctx.Member.DisplayName;
-            string nick = string.IsNullOrEmpty(member.DisplayName) ? member.Username : member.DisplayName;
+            string adminNick = !string.IsNullOrEmpty(adminUser.Nickname) ? adminUser.Nickname : adminUser.Username;
 
-            if (member.Roles.Contains(mutedRole))
+            string nick = !string.IsNullOrEmpty(member.Nickname) ? member.Nickname : member.Username;
+
+            bool containsMutedRole = member.RoleIds.Any(x => x == 796163891783663617);
+
+            if (containsMutedRole)
             {
-                await member.RevokeRoleAsync(mutedRole, reason);
-                await logChannel.SendMessageAsync($"{adminNick} has un-muted {nick}.");
+                await member.RemoveRoleAsync(mutedRole);
+                await Program.MainGuildLogChannel.SendMessageAsync($"{adminNick} has un-muted {nick}.");
                 return;
             }
 
-            await member.GrantRoleAsync(mutedRole, reason);
-            await logChannel.SendMessageAsync($"{adminNick} has muted {nick}. Reason: {reason}");
+            await member.AddRoleAsync(mutedRole);
+            await Program.MainGuildLogChannel.SendMessageAsync($"{adminNick} has muted {nick}. Reason: {reason}");
             await member.SendMessageAsync(
-                $"You've been muted in the {ctx.Guild.Name} Discord. Reasoning behind this is: {reason}");
+                $"You've been muted in the {Context.Guild.Name} Discord. Reasoning behind this is: {reason}");
         }
-
-        /*
-        [Command("masspm"), RequirePermissions(Permissions.Administrator), Hidden]
-        public async Task MassPmCommand(CommandContext ctx, [RemainingText] string message)
-        {
-            if (ctx.Guild != Program.MainGuild)
-            {
-                await ctx.Message.DeleteAsync();
-                return;
-            }
-
-            await ctx.TriggerTypingAsync();
-
-            await ctx.RespondAsync($"Sending the mass PM out!");
-
-            await ctx.TriggerTypingAsync();
-
-            int count = 0;
-
-            foreach (DiscordMember discordMember in ctx.Guild.Members)
-            {
-                if (discordMember.IsBot) continue;
-
-                Console.WriteLine($"Sending Message to {discordMember.Username}");
-
-                DiscordDmChannel dmChannel = await Program._discord.CreateDmAsync(discordMember);
-
-                if (dmChannel == null) continue;
-
-                DiscordMessage discordMessage = await dmChannel.SendMessageAsync(message);
-
-                if (discordMessage == null) continue;
-                count++;
-
-                Console.WriteLine($"Message sent to {discordMember.Username}");
-            }
-
-            await ctx.RespondAsync($"Send the PM to {count}/{ctx.Guild.MemberCount} Members.");
-        }*/
     }
 }

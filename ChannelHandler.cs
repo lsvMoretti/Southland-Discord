@@ -1,5 +1,6 @@
 ﻿using System;
-using DSharpPlus.Entities;
+using Discord;
+using Discord.WebSocket;
 using Newtonsoft.Json;
 
 namespace DiscordBot
@@ -29,7 +30,7 @@ namespace DiscordBot
 
                 if (!tryParse) return;
 
-                DiscordChannel channel = await Program._discord.GetChannelAsync(channelId);
+                SocketTextChannel channel = Program.MainGuild.GetTextChannel(channelId);
 
                 if (channel == null) return;
 
@@ -52,11 +53,11 @@ namespace DiscordBot
 
                 if (!tryParse) return;
 
-                DiscordChannel channel = await Program._discord.GetChannelAsync(channelId);
+                SocketTextChannel channel = Program.MainGuild.GetTextChannel(channelId);
 
                 if (channel == null) return;
 
-                DiscordEmbed embed = JsonConvert.DeserializeObject<DiscordEmbed>(embedJson);
+                Embed embed = JsonConvert.DeserializeObject<Embed>(embedJson);
 
                 await channel.SendMessageAsync(embed: embed);
             }
