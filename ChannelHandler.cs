@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using Discord;
 using Discord.WebSocket;
+using DSharpPlus.Entities;
 using Newtonsoft.Json;
 
 namespace DiscordBot
@@ -55,11 +57,52 @@ namespace DiscordBot
 
                 SocketTextChannel channel = Program.MainGuild.GetTextChannel(channelId);
 
-                if (channel == null) return;
+                if (channel == null)
+                {
+                    channel = Program.EmergencyGuild.GetTextChannel(channelId);
+                    if (channel == null) return;
+                }
 
-                Embed embed = JsonConvert.DeserializeObject<Embed>(embedJson);
+                DiscordEmbed discordEmbed = JsonConvert.DeserializeObject<DiscordEmbed>(embedJson);
 
-                await channel.SendMessageAsync(embed: embed);
+                List<EmbedFieldBuilder> fieldBuilder = new List<EmbedFieldBuilder>();
+
+                foreach (DiscordEmbedField discordEmbedField in discordEmbed.Fields)
+                {
+                    fieldBuilder.Add(new EmbedFieldBuilder
+                    {
+                        Name = discordEmbedField.Name,
+                        Value = discordEmbedField.Value,
+                        IsInline = discordEmbedField.Inline
+                    });
+                }
+
+                EmbedBuilder embed = new EmbedBuilder
+                {
+                    Title = discordEmbed.Title,
+                    Timestamp = discordEmbed.Timestamp,
+                    Description = discordEmbed.Description,
+                    Color = Color.DarkOrange,
+                    Fields = fieldBuilder
+                };
+
+                if (discordEmbed.Thumbnail != null)
+                {
+                    if (!string.IsNullOrEmpty(discordEmbed.Thumbnail.Url.ToString()))
+                    {
+                        embed.ThumbnailUrl = discordEmbed.Thumbnail.Url.ToString();
+                    }
+                }
+
+                if (discordEmbed.Image != null)
+                {
+                    if (!string.IsNullOrEmpty(discordEmbed.Image.Url.ToString()))
+                    {
+                        embed.ImageUrl = discordEmbed.Image.Url.ToString();
+                    }
+                }
+
+                await channel.SendMessageAsync(embed: embed.Build());
             }
             catch (Exception e)
             {
