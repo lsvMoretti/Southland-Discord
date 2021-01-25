@@ -14,7 +14,7 @@ namespace DiscordBot
         {
             Console.WriteLine($"Starting SignalR Hub Connection");
 
-            string url = @"http://176.9.66.40:2000/signalr";
+            string url = @"http://149.202.88.222:2000/signalr";
 
             hubConnection = new HubConnectionBuilder().WithUrl(url).Build();
             hubConnection.Reconnecting += HubConnection_Reconnecting;
@@ -22,6 +22,7 @@ namespace DiscordBot
             await Connect(hubConnection);
 
             hubConnection.Closed += HubConnection_Closed;
+            hubConnection.Reconnecting += HubConnectionOnReconnecting;
 
             await hubConnection.InvokeAsync("AddToUsergroup", "Discord", null);
 
@@ -64,6 +65,12 @@ namespace DiscordBot
             hubConnection.On<ulong>("SendLinkedDiscordMessage", SendLinkedMessageToDiscordUser);
         }
 
+        private static Task HubConnectionOnReconnecting(Exception arg)
+        {
+            Console.WriteLine("Reconnecting....");
+            return Task.CompletedTask;
+        }
+
         private static async Task SendLinkedMessageToDiscordUser(ulong discordId)
         {
             Console.WriteLine($"Send Linked Message To Discord User -- ID: {discordId}");
@@ -104,10 +111,7 @@ namespace DiscordBot
                 connected = await Connect(hubConnection);
             }
 
-            if (connected)
-            {
-                Console.WriteLine($"[SignalR] Hub Reconnected");
-            }
+            Console.WriteLine($"[SignalR] Hub Reconnected");
         }
 
         private static async Task<bool> Connect(HubConnection connection)

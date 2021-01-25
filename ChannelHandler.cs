@@ -34,7 +34,14 @@ namespace DiscordBot
 
                 SocketTextChannel channel = Program.MainGuild.GetTextChannel(channelId);
 
-                if (channel == null) return;
+                if (channel == null)
+                {
+                    channel = Program.EmergencyGuild.GetTextChannel(channelId);
+                    if (channel == null)
+                    {
+                        return;
+                    }
+                }
 
                 await channel.SendMessageAsync(message);
             }

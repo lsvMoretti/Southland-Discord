@@ -173,7 +173,7 @@ namespace DiscordBot
 
         private async Task DiscordOnMessageReceived(SocketMessage arg)
         {
-            if (arg.Channel.Id == 787791455950471218)
+            if (arg.Channel.Id == 802384633378635788)
             {
                 if (arg.Author.IsBot) return;
 
