@@ -87,7 +87,8 @@ namespace DiscordBot.Commands
         {
             await Context.Channel.TriggerTypingAsync();
 
-            await ReplyAsync($"Bugs can be reported on our forums over at https://forum.sol-rp.com/threads/bug-report-format.11/unread");
+            await ReplyAsync(
+                $"Bugs can be reported on our forums over at https://forum.sol-rp.com/threads/bug-report-format.11/unread");
         }
 
         [Command("activity")]
@@ -159,26 +160,32 @@ namespace DiscordBot.Commands
                 {
                     Author = null,
                     Color = Color.Blue,
-                    Description = $"Current Weather: {textInfo.ToTitleCase(currentWeather.weather.FirstOrDefault().description)}",
-                    ThumbnailUrl = $"https://openweathermap.org/img/wn/{currentWeather.weather.FirstOrDefault()?.icon}.png",
+                    Description =
+                        $"Current Weather: {textInfo.ToTitleCase(currentWeather.weather.FirstOrDefault().description)}",
+                    ThumbnailUrl =
+                        $"https://openweathermap.org/img/wn/{currentWeather.weather.FirstOrDefault()?.icon}.png",
                     Timestamp = DateTimeOffset.Now,
                     Title = "Current Weather for Los Santos",
                 };
 
                 embedBuilder.AddField("Temperature",
-                    $"{Math.Round(currentWeather.main.temp)} °C - {Math.Round(ConvertTemp.ConvertCelsiusToFahrenheit(currentWeather.main.temp))} °F", true);
+                    $"{Math.Round(currentWeather.main.temp)} °C - {Math.Round(ConvertTemp.ConvertCelsiusToFahrenheit(currentWeather.main.temp))} °F",
+                    true);
 
                 embedBuilder.AddField("High Temperature",
-                    $"{Math.Round(currentWeather.main.temp_max)} °C - {Math.Round(ConvertTemp.ConvertCelsiusToFahrenheit(currentWeather.main.temp_max))} °F", true);
+                    $"{Math.Round(currentWeather.main.temp_max)} °C - {Math.Round(ConvertTemp.ConvertCelsiusToFahrenheit(currentWeather.main.temp_max))} °F",
+                    true);
 
                 embedBuilder.AddField("Low Temperature",
-                    $"{Math.Round(currentWeather.main.temp_min)} °C - {Math.Round(ConvertTemp.ConvertCelsiusToFahrenheit(currentWeather.main.temp_min))} °F", true);
+                    $"{Math.Round(currentWeather.main.temp_min)} °C - {Math.Round(ConvertTemp.ConvertCelsiusToFahrenheit(currentWeather.main.temp_min))} °F",
+                    true);
 
                 embedBuilder.AddField("Humidity", $"{currentWeather.main.humidity} %RH", true);
 
                 embedBuilder.AddField("Visibility", $"{currentWeather.visibility} meters", true);
 
-                embedBuilder.AddField("Time", $"{serverTime[0]:D2}:{serverTime[1]:D2} (({localTime.Hour:D2}:{localTime.Minute:D2}))", true);
+                embedBuilder.AddField("Time",
+                    $"{serverTime[0]:D2}:{serverTime[1]:D2} (({localTime.Hour:D2}:{localTime.Minute:D2}))", true);
 
                 await ReplyAsync(embed: embedBuilder.Build());
             }
@@ -370,6 +377,16 @@ namespace DiscordBot.Commands
             await Program.MainGuildLogChannel.SendMessageAsync($"{adminNick} has muted {nick}. Reason: {reason}");
             await member.SendMessageAsync(
                 $"You've been muted in the {Context.Guild.Name} Discord. Reasoning behind this is: {reason}");
+        }
+
+        [Command("clearreports")]
+        [RequireContext(ContextType.Guild)]
+        [RequireUserPermission(GuildPermission.ManageChannels)]
+        public async Task ClearReports()
+        {
+            if (Context.Guild != Program.MainGuild) return;
+
+            GameReportHandler.ClearReportChannels();
         }
     }
 }
