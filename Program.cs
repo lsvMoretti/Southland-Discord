@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Threading;
@@ -8,6 +9,9 @@ using Discord.Commands;
 using Discord.WebSocket;
 using DiscordBot.Services;
 using Microsoft.Extensions.DependencyInjection;
+using Image = System.Drawing.Image;
+using ImageFormat = System.Drawing.Imaging.ImageFormat;
+using Timer = System.Timers.Timer;
 
 namespace DiscordBot
 {
@@ -268,6 +272,39 @@ namespace DiscordBot
 
                 await arg.SendMessageAsync($"Welcome to Southland Roleplay! For any information on using the bot please use ?help in one of the server channels!\n" +
                                            $"Don't forget to read and react to the rules channel to get full access to the discord!");
+            }
+        }
+
+        public static async void SendScreenShotToUser(string userIdString, string path)
+        {
+            try
+            {
+                bool tryParse = ulong.TryParse(userIdString, out ulong userId);
+
+                if (!tryParse)
+                {
+                    Console.WriteLine("Unable to parse user ID");
+                    return;
+                }
+
+                SocketUser discordUser = Discord.GetUser(userId);
+
+                IMessage message = await discordUser.SendFileAsync(path, "Here's your screenshot!");
+
+                Timer timer = new Timer(600000);
+
+                timer.Start();
+
+                timer.Elapsed += (sender, args) =>
+                {
+                    File.Delete(path);
+                    timer.Stop();
+                };
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                return;
             }
         }
 

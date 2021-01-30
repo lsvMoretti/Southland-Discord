@@ -63,6 +63,8 @@ namespace DiscordBot
             #endregion Admin Reports
 
             hubConnection.On<ulong>("SendLinkedDiscordMessage", SendLinkedMessageToDiscordUser);
+
+            hubConnection.On<string, string>("SendScreenshotToDiscordUser", Program.SendScreenShotToUser);
         }
 
         private static Task HubConnectionOnReconnecting(Exception arg)
