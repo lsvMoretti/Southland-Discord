@@ -75,6 +75,28 @@ namespace DiscordBot
 
                 await Discord.SetActivityAsync(new Game("www.sol-rp.com", ActivityType.Watching));
 
+                Timer deleteScreenShotTimer = new Timer(300000)
+                {
+                    AutoReset = true
+                };
+
+                deleteScreenShotTimer.Start();
+
+                deleteScreenShotTimer.Elapsed += (sender, args) =>
+                {
+                    Console.WriteLine($"Deleting Screen Shots");
+
+                    int count = 0;
+
+                    foreach (string file in Directory.GetFiles("C:\\Servers\\Southland\\Screens"))
+                    {
+                        File.Delete(file);
+                        count++;
+                    }
+
+                    Console.WriteLine($"Deleted {count} Screen Shots");
+                };
+
                 #region Events
 
                 Discord.Ready += DiscordOnReady;
