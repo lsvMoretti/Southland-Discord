@@ -50,8 +50,8 @@ namespace DiscordBot.Commands
             };
 
             embedBuilder.Description = mentionedUser != null
-                ? $"Welcome to Southland Roleplay {mentionedUser.Mention}, We are proud to have you with us! Our server is under a restructure!"
-                : $"Welcome to Southland Roleplay, We are proud to have you with us! Our server is launching soon!";
+                ? $"Welcome to Southland Roleplay {mentionedUser.Mention}, We are proud to have you with us! Our server is online and accepting applications!"
+                : $"Welcome to Southland Roleplay, We are proud to have you with us! Our server is online and accepting applications!";
 
             embedBuilder.AddField("Forums", "https://forum.sol-rp.com");
             embedBuilder.AddField("Website", "https://sol-rp.com");
@@ -72,7 +72,7 @@ namespace DiscordBot.Commands
         [RequireContext(ContextType.Guild)]
         public async Task DiscordCommandOnlinePlayers()
         {
-            if (Context.Channel.Id != 787791455950471218) return;
+            if (Context.Channel.Id != 802384633378635788) return;
 
             await Context.Channel.TriggerTypingAsync();
 
@@ -95,7 +95,7 @@ namespace DiscordBot.Commands
         [RequireContext(ContextType.Guild)]
         public async Task DiscordActivityCommand()
         {
-            if (Context.Channel.Id != 787791455950471218)
+            if (Context.Channel.Id != 802384633378635788)
             {
                 await Context.Message.DeleteAsync();
                 return;
