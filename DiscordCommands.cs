@@ -352,7 +352,7 @@ namespace DiscordBot.Commands
         [Command("mute")]
         [RequireContext(ContextType.Guild)]
         [RequireUserPermission(GuildPermission.KickMembers)]
-        public async Task MuteMemberCommand(IGuildUser member, [Remainder] string reason = "")
+        public async Task MuteMemberCommand(IGuildUser member, string reason = "")
         {
             await Context.Message.DeleteAsync();
 
@@ -369,14 +369,14 @@ namespace DiscordBot.Commands
             if (containsMutedRole)
             {
                 await member.RemoveRoleAsync(mutedRole);
-                await Program.MainGuildLogChannel.SendMessageAsync($"{adminNick} has un-muted {nick}.");
+                await Context.Guild.GetTextChannel(795062350398881832).SendMessageAsync($"{adminNick} has un-muted {nick}.");
                 return;
             }
 
             await member.AddRoleAsync(mutedRole);
-            await Program.MainGuildLogChannel.SendMessageAsync($"{adminNick} has muted {nick}. Reason: {reason}");
-            await member.SendMessageAsync(
-                $"You've been muted in the {Context.Guild.Name} Discord. Reasoning behind this is: {reason}");
+            await Context.Guild.GetTextChannel(795062350398881832).SendMessageAsync($"{adminNick} has muted {nick}. Reason: {reason}");
+            IUserMessage userMessage = await member.SendMessageAsync(
+                $"You've been muted in the {Context.Guild.Name} Discord. Reasoning behind this is: {reason}");)
         }
 
         [Command("clearreports")]

@@ -12,7 +12,7 @@ namespace DiscordBot
     public class GameReportHandler
     {
         public static List<AdminReportObject> AdminReports = new List<AdminReportObject>();
-        public static Dictionary<int, RestTextChannel> ReportChannels = new Dictionary<int, RestTextChannel>();
+        public static Dictionary<int, ulong> ReportChannels = new Dictionary<int, ulong>();
 
         public static async void AddAdminReport(string reportJson)
         {
@@ -47,7 +47,7 @@ namespace DiscordBot
 
             if (!ReportChannels.ContainsKey(reportObject.Id))
             {
-                ReportChannels.Add(reportObject.Id, reportChannel);
+                ReportChannels.Add(reportObject.Id, reportChannel.Id);
             }
 
             await reportChannel.SendMessageAsync(embed: discordEmbed.Build());
@@ -64,9 +64,13 @@ namespace DiscordBot
 
                 AdminReports.Remove(listObject);
 
-                bool tryGetChannel = ReportChannels.TryGetValue(reportObject.Id, out RestTextChannel reportChannel);
+                bool tryGetChannel = ReportChannels.TryGetValue(reportObject.Id, out ulong reportChannelId);
 
                 if (!tryGetChannel) return;
+
+                ITextChannel reportChannel = Program.MainGuild.GetTextChannel(reportChannelId);
+
+                if (reportChannel == null) return;
 
                 await reportChannel.SendMessageAsync($"The report has been closed or handled in-game.\nThis channel is being removed in five seconds");
 
