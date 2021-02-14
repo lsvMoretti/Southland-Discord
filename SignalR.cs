@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Discord;
 using Discord.WebSocket;
 using Microsoft.AspNetCore.SignalR.Client;
+using Newtonsoft.Json;
 
 namespace DiscordBot
 {
@@ -62,9 +64,19 @@ namespace DiscordBot
 
             #endregion Admin Reports
 
-            hubConnection.On<ulong>("SendLinkedDiscordMessage", SendLinkedMessageToDiscordUser);
+            hubConnection.On<string>("SendLinkedDiscordMessage", SendLinkedMessageToDiscordUser);
 
             hubConnection.On<string, string>("SendScreenshotToDiscordUser", Program.SendScreenShotToUser);
+
+            hubConnection.On<string>("DiscordReturnLinkedAccounts", OnReturnDiscordLinkedAccounts);
+        }
+
+        private static void OnReturnDiscordLinkedAccounts(string json)
+        {
+            List<ulong> userIds = JsonConvert.DeserializeObject<List<ulong>>(json);
+
+            PermissionHandler.ConnectedAccounts = userIds;
+            Program.UpdateDiscordLinkPermissions();
         }
 
         private static Task HubConnectionOnReconnecting(Exception arg)
@@ -73,8 +85,12 @@ namespace DiscordBot
             return Task.CompletedTask;
         }
 
-        private static async Task SendLinkedMessageToDiscordUser(ulong discordId)
+        private static async Task SendLinkedMessageToDiscordUser(string discordIdString)
         {
+            bool tryParse = ulong.TryParse(discordIdString, out ulong discordId);
+
+            if (!tryParse) return;
+
             Console.WriteLine($"Send Linked Message To Discord User -- ID: {discordId}");
 
             SocketUser user = Program.Discord.GetUser(discordId);
@@ -170,6 +186,11 @@ namespace DiscordBot
         public static async void CloseReport(int reportId)
         {
             await hubConnection.InvokeAsync("CloseReport", reportId);
+        }
+
+        public static async void FetchLinkedAccounts()
+        {
+            await hubConnection.InvokeAsync("DiscordFetchLinkedAccounts");
         }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
@@ -9,14 +10,14 @@ using Discord.Commands;
 using Discord.WebSocket;
 using DiscordBot.Services;
 using Microsoft.Extensions.DependencyInjection;
-using Image = System.Drawing.Image;
-using ImageFormat = System.Drawing.Imaging.ImageFormat;
 using Timer = System.Timers.Timer;
 
 namespace DiscordBot
 {
     public class Program
     {
+        public static List<ulong> ConnectedAccounts = new List<ulong>();
+
         public static DiscordSocketClient Discord;
         public static readonly string LogoUri = "https://sol-rp.com/southland-logo.png";
         private const string ServiceName = "SouthlandDiscord";
@@ -75,6 +76,18 @@ namespace DiscordBot
 
                 await Discord.SetActivityAsync(new Game("www.sol-rp.com", ActivityType.Watching));
 
+                Timer permissionUpdateTimer = new Timer(60000)
+                {
+                    AutoReset = true
+                };
+
+                permissionUpdateTimer.Start();
+
+                permissionUpdateTimer.Elapsed += (sender, args) =>
+                {
+                    SignalR.FetchLinkedAccounts();
+                };
+
                 Timer deleteScreenShotTimer = new Timer(300000)
                 {
                     AutoReset = true
@@ -122,8 +135,6 @@ namespace DiscordBot
 
         private Task DiscordOnReady()
         {
-            PermissionHandler.StartPermissionUpdate();
-
             MainGuild = Discord.GetGuild(MainGuildId);
             EmergencyGuild = Discord.GetGuild(EmergencyGuildId);
 
