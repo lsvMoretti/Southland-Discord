@@ -376,7 +376,7 @@ namespace DiscordBot.Commands
             await member.AddRoleAsync(mutedRole);
             await Context.Guild.GetTextChannel(795062350398881832).SendMessageAsync($"{adminNick} has muted {nick}. Reason: {reason}");
             IUserMessage userMessage = await member.SendMessageAsync(
-                $"You've been muted in the {Context.Guild.Name} Discord. Reasoning behind this is: {reason}");)
+                $"You've been muted in the {Context.Guild.Name} Discord. Reasoning behind this is: {reason}");
         }
 
         [Command("clearreports")]
@@ -387,6 +387,40 @@ namespace DiscordBot.Commands
             if (Context.Guild != Program.MainGuild) return;
 
             GameReportHandler.ClearReportChannels();
+        }
+
+        [Command("roles")]
+        [RequireContext(ContextType.Guild)]
+        [RequireUserPermission(GuildPermission.ManageRoles)]
+        public async void ViewRoles()
+        {
+            int count = Context.Guild.GetUser(Context.User.Id).Roles.Count;
+
+            Console.WriteLine($"COunt: {count}");
+
+            await Context.Channel.SendMessageAsync($"Role Count for you: {count}");
+        }
+
+        [Command("clearplayers")]
+        [RequireContext(ContextType.Guild)]
+        [RequireUserPermission(GuildPermission.Administrator)]
+        public async void ClearPlayers()
+        {
+            var users = Context.Guild.Users;
+
+            int count = 0;
+
+            foreach (SocketGuildUser socketGuildUser in users)
+            {
+                if (socketGuildUser.Roles.Any()) continue;
+
+                await socketGuildUser.KickAsync("No Roles");
+
+                count++;
+            }
+
+            await Context.Guild.GetTextChannel(795062350398881832).SendMessageAsync(
+                $"{Context.User.Username} has kicked {count} out of {Context.Guild.Name} for having no roles!");
         }
     }
 }

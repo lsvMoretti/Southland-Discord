@@ -122,6 +122,8 @@ namespace DiscordBot
 
         private Task DiscordOnReady()
         {
+            PermissionHandler.StartPermissionUpdate();
+
             MainGuild = Discord.GetGuild(MainGuildId);
             EmergencyGuild = Discord.GetGuild(EmergencyGuildId);
 
@@ -134,26 +136,57 @@ namespace DiscordBot
             if (MainGuild != null)
             {
                 Console.WriteLine($"Connected to {MainGuild.Name}");
+
+                MainGuildLogChannel = MainGuild.GetTextChannel(MainGuildLogChannelId);
+
+                MainGuildJoinChannel = MainGuild.GetTextChannel(MainGuildJoinChannelId);
             }
 
             if (EmergencyGuild == null)
             {
                 Console.WriteLine($"Unable to connect to the Emergency Guild");
-                return Task.CompletedTask;
+                //return Task.CompletedTask;
             }
 
             if (EmergencyGuild != null)
             {
                 Console.WriteLine($"Connected to {EmergencyGuild.Name}");
+                EmergencyGuildLogChannel = EmergencyGuild.GetTextChannel(EmergencyGuildLogChannelId);
             }
 
-            MainGuildLogChannel = MainGuild.GetTextChannel(MainGuildLogChannelId);
-
-            MainGuildJoinChannel = MainGuild.GetTextChannel(MainGuildJoinChannelId);
-
-            EmergencyGuildLogChannel = EmergencyGuild.GetTextChannel(EmergencyGuildLogChannelId);
-
             return Task.CompletedTask;
+        }
+
+        public static async void UpdateDiscordLinkPermissions()
+        {
+            var ucpLinkedIds = PermissionHandler.ConnectedAccounts;
+
+            var guildMembers = MainGuild.Users;
+
+            ulong linkedRoleId = 810501847625498675;
+
+            var role = MainGuild.GetRole(linkedRoleId);
+
+            foreach (var member in guildMembers)
+            {
+                if (!ucpLinkedIds.Contains(member.Id))
+                {
+                    // Doesn't contain member ID
+
+                    if (member.Roles.Contains(role))
+                    {
+                        // Remove from Linked Role
+                        await member.RemoveRoleAsync(role);
+                    }
+                }
+                else
+                {
+                    if (!member.Roles.Contains(role))
+                    {
+                        await member.AddRoleAsync(role);
+                    }
+                }
+            }
         }
 
         private async Task DiscordOnReactionAdded(Cacheable<IUserMessage, ulong> cachedMessage, ISocketMessageChannel channel, SocketReaction reaction)
