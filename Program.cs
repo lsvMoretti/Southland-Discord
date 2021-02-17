@@ -86,6 +86,7 @@ namespace DiscordBot
                 permissionUpdateTimer.Elapsed += (sender, args) =>
                 {
                     SignalR.FetchLinkedAccounts();
+                    SignalR.FetchDonatorAccounts();
                 };
 
                 Timer deleteScreenShotTimer = new Timer(300000)
@@ -196,6 +197,57 @@ namespace DiscordBot
                     {
                         await member.AddRoleAsync(role);
                     }
+                }
+            }
+        }
+
+        public static async void UpdateDiscordDonatorLevels()
+        {
+            var donatorAccounts = PermissionHandler.DonatorInfo;
+
+            var guildMembers = MainGuild.Users;
+
+            var bronzeRole = MainGuild.GetRole(811645907237601391);
+            var silverRole = MainGuild.GetRole(811646034795036742);
+            var goldRole = MainGuild.GetRole(811646191158558751);
+
+            foreach (var member in guildMembers)
+            {
+                var donatorAccount = donatorAccounts.FirstOrDefault(x => x.Id == member.Id);
+
+                if (donatorAccount == null)
+                {
+                    if (member.Roles.Contains(bronzeRole))
+                    {
+                        await member.RemoveRoleAsync(bronzeRole);
+                    }
+
+                    if (member.Roles.Contains(silverRole))
+                    {
+                        await member.RemoveRoleAsync(silverRole);
+                    }
+
+                    if (member.Roles.Contains(goldRole))
+                    {
+                        await member.RemoveRoleAsync(goldRole);
+                    }
+
+                    continue;
+                }
+
+                if (donatorAccount.DonatorLevel == DonationLevel.Bronze)
+                {
+                    await member.AddRoleAsync(bronzeRole);
+                }
+
+                if (donatorAccount.DonatorLevel == DonationLevel.Silver)
+                {
+                    await member.AddRoleAsync(silverRole);
+                }
+
+                if (donatorAccount.DonatorLevel == DonationLevel.Gold)
+                {
+                    await member.AddRoleAsync(goldRole);
                 }
             }
         }

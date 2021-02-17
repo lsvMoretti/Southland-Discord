@@ -69,6 +69,17 @@ namespace DiscordBot
             hubConnection.On<string, string>("SendScreenshotToDiscordUser", Program.SendScreenShotToUser);
 
             hubConnection.On<string>("DiscordReturnLinkedAccounts", OnReturnDiscordLinkedAccounts);
+
+            hubConnection.On<string>("DiscordReturnDonatorAccounts", OnReturnDiscordDonatorAccounts);
+        }
+
+        private static void OnReturnDiscordDonatorAccounts(string json)
+        {
+            List<DonatorInfo> donatorInfo = JsonConvert.DeserializeObject<List<DonatorInfo>>(json);
+
+            PermissionHandler.DonatorInfo = donatorInfo;
+
+            Program.UpdateDiscordDonatorLevels();
         }
 
         private static void OnReturnDiscordLinkedAccounts(string json)
@@ -191,6 +202,11 @@ namespace DiscordBot
         public static async void FetchLinkedAccounts()
         {
             await hubConnection.InvokeAsync("DiscordFetchLinkedAccounts");
+        }
+
+        public static async void FetchDonatorAccounts()
+        {
+            await hubConnection.InvokeAsync("DiscordFetchDonatorAccounts");
         }
     }
 }
