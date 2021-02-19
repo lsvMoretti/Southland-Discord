@@ -28,7 +28,7 @@ namespace DiscordBot
         private static readonly ulong MainGuildId = 748851074135490560;
 
         public static SocketGuild EmergencyGuild;
-        private static readonly ulong EmergencyGuildId = 797216050429034516;
+        private static readonly ulong EmergencyGuildId = 810922013903290368;
 
         #endregion Guilds
 
@@ -41,7 +41,7 @@ namespace DiscordBot
         private static readonly ulong MainGuildJoinChannelId = 748851942075269201;
 
         public static ITextChannel EmergencyGuildLogChannel;
-        private static readonly ulong EmergencyGuildLogChannelId = 798259039062196275;
+        private static readonly ulong EmergencyGuildLogChannelId = 812122185099247616;
 
         #endregion Channels
 
@@ -295,6 +295,22 @@ namespace DiscordBot
 
         private async Task DiscordOnMessageReceived(SocketMessage arg)
         {
+            if (arg.MentionedUsers.FirstOrDefault(x => x.Id == 132968074709041153) != null)
+            {
+                if (arg.Author.Id == 338403703058857985) return; // Tommy
+                if (arg.Author.Id == 134401969392451585) return; // Shoker
+                await arg.DeleteAsync();
+                await arg.Channel.SendMessageAsync($"{arg.Author.Mention} please don't tag moretti!");
+            }
+
+            if (arg.MentionedUsers.FirstOrDefault(x => x.Id == 338403703058857985) != null)
+            {
+                if (arg.Author.Id == 132968074709041153) return; // Moretti
+                if (arg.Author.Id == 134401969392451585) return; // Shoker
+                await arg.DeleteAsync();
+                await arg.Channel.SendMessageAsync($"{arg.Author.Mention} please don't tag Tommy!");
+            }
+
             if (arg.Channel.Id == 802384633378635788)
             {
                 if (arg.Author.IsBot) return;
